@@ -102,8 +102,8 @@ const server = http.createServer((req, res) => {
         (OPENAI_MODEL ? "window.OPENAI_MODEL=" + JSON.stringify(OPENAI_MODEL) + ";" : "") +
         "</script>";
       // Prefer the head slug; fall back to the first <script> tag.
-      if (html.includes("</head>")) html = html.replace("</head>", inject + "\\n</head>");
-      else html = html.replace("<script>", inject + "\\n<script>");
+      if (html.includes("</head>")) html = html.replace("</head>", inject + "\n</head>");
+      else html = html.replace("<script>", inject + "\n<script>");
       data = Buffer.from(html, "utf8");
     }
     res.writeHead(200, { "Content-Type": contentType(filePath) });
