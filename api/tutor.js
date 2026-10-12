@@ -61,8 +61,9 @@ Rules:
           ...history.slice(-10),
           { role: "user", content: userMessage },
         ],
-        temperature: 0.7,
-        max_tokens: 320,
+        max_completion_tokens: 320,
+        // gpt-5* models only accept their default temperature
+        ...( /^gpt-5/.test(MODEL) ? {} : { temperature: 0.7 } ),
       }),
     });
 

@@ -14,7 +14,7 @@
   const API_URL = "https://api.openai.com/v1/chat/completions";
 
   const SYSTEM_PROMPT = `
-You are "Bruno", the warm and friendly assistant for GutenTag — a German
+You are "Klaus", the warm and friendly assistant for GutenTag — a German
 language tutoring school in Berlin run by a husband-and-wife team (Anna and
 Lukas Keller). Answer questions about the school's services only, in the
 language of the user's question (English or German). Be concise (max ~120
@@ -67,10 +67,14 @@ the conversation back with a smile.`;
       { role: "user", content: userMessage },
     ];
 
+    const body = { model: MODEL, messages, max_completion_tokens: 300 };
+    // gpt-5* models only accept their default temperature
+    if (!/^gpt-5/.test(MODEL)) body.temperature = 0.6;
+
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
-      body: JSON.stringify({ model: MODEL, messages, temperature: 0.6, max_tokens: 300 }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {

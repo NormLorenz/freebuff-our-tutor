@@ -237,7 +237,7 @@
     if (!saved.length) {
       addBubble(
         chatLog,
-        " servus! 🥨 I'm Bruno. Ask me anything about GutenTag — lessons, prices, hours, or our team.",
+        "🥨 I'm Klaus. Ask me anything about GutenTag — lessons, prices, hours, or our team.",
         "bot"
       );
     }
