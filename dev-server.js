@@ -1,5 +1,5 @@
 /**
- * dev-server.js — zero-dependency static file server for DeutschLust.
+ * dev-server.js — zero-dependency static file server for GutenTag.
  * Start with: npm start  →  http://localhost:8000/public/
  */
 const http = require("http");
@@ -86,7 +86,7 @@ server.on("error", (err) => {
 
 server.listen(PORT, () => {
   console.log("");
-  console.log("  DeutschLust dev server");
+  console.log("  GutenTag dev server");
   console.log("  --------------------------------");
   console.log("  Home:      http://localhost:" + PORT + "/public/");
   console.log("  Root:      http://localhost:" + PORT + "/  (redirects home)");

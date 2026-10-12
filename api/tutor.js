@@ -1,15 +1,15 @@
 /**
- * tutor.js — DeutschLust AI German Tutor
+ * tutor.js — GutenTag AI German Tutor
  *
  * Uses the ChatGPT API to act as a friendly German tutor: it replies at the
  * student's CEFR level (A1–C1), gently corrects mistakes, and gives short
- * English notes when helpful. Conversation is persisted via DeutschDB.
+ * English notes when helpful. Conversation is persisted via GutenDB.
  *
  * Configure the model key the same way as chat.js (localStorage
  * "openaiApiKey" or window.OPENAI_API_KEY). Without a key, a built-in
  * practice mode keeps the tutor usable offline.
  *
- * Exposed as window.DeutschTutor.
+ * Exposed as window.GutenTutor.
  */
 (function () {
   "use strict";
@@ -19,7 +19,7 @@
 
   function systemPrompt(level) {
     return `
-You are "Herr Grün", a warm, patient, encouraging German tutor at DeutschLust,
+You are "Herr Grün", a warm, patient, encouraging German tutor at GutenTag,
 a friendly German school in Berlin. The student's CEFR level is ${level}.
 
 Rules:
@@ -138,5 +138,5 @@ Rules:
     }
   }
 
-  window.DeutschTutor = { reply, hasKey: () => !!getApiKey() };
+  window.GutenTutor = { reply, hasKey: () => !!getApiKey() };
 })();

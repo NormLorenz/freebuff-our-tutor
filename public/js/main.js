@@ -1,14 +1,13 @@
 /**
- * main.js — wires up the DeutschLust UI.
- * Requires window.DeutschDB (api/db.js), window.DeutschChat (api/chat.js),
- * and window.DeutschTutor (api/tutor.js).
+ * main.js — wires up the GutenTag UI.
+ * Requires window.GutenDB (api/db.js), window.GutenChat (api/chat.js),
+ * and window.GutenTutor (api/tutor.js).
  */
 (function () {
   "use strict";
-
-  const DB = window.DeutschDB;
-  const Chat = window.DeutschChat;
-  const Tutor = window.DeutschTutor;
+  const DB = window.GutenDB;
+  const Chat = window.GutenChat;
+  const Tutor = window.GutenTutor;
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -184,7 +183,7 @@
       localStorage.setItem("dl-user", JSON.stringify(user));
       showSuccess(
         "Vollständig! 🎉",
-        "Welcome to DeutschLust, " + user.name + "! Your " + user.plan + " package is reserved. Check the Visit section for trial times — and don't forget your AI tutor (bottom right!)."
+        "Welcome to GutenTag, " + user.name + "! Your " + user.plan + " package is reserved. Check the Visit section for trial times — and don't forget your AI tutor (bottom right!)."
       );
       refreshAuthState();
     } catch (err) {
@@ -238,7 +237,7 @@
     if (!saved.length) {
       addBubble(
         chatLog,
-        " servus! 🥨 I'm Bruno. Ask me anything about DeutschLust — lessons, prices, hours, or our team.",
+        " servus! 🥨 I'm Bruno. Ask me anything about GutenTag — lessons, prices, hours, or our team.",
         "bot"
       );
     }

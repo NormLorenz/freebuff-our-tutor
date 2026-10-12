@@ -1,5 +1,5 @@
 /**
- * db.js — Data layer for DeutschLust
+ * db.js — Data layer for GutenTag
  * Uses Dexie.js (IndexedDB wrapper) to persist user + application data.
  *
  * Tables:
@@ -9,7 +9,7 @@
  *   tutorSessions— German tutor conversations { level, messages[], updatedAt }
  *   settings     — app preferences { key, value } (e.g. theme, tutorLevel)
  *
- * Exposed globally as window.DeutschDB (plain script, no imports needed).
+ * Exposed globally as window.GutenDB (plain script, no imports needed).
  */
 
 let DexieLib = window.Dexie;
@@ -22,7 +22,7 @@ if (!DexieLib) {
 }
 
 const db = DexieLib
-  ? new DexieLib("DeutschLustDB")
+  ? new DexieLib("GutenTagDB")
   : null;
 
 if (db) {
@@ -203,7 +203,7 @@ const Settings = {
 /* ------------------------------------------------------------------ */
 /* Global export + health check                                       */
 /* ------------------------------------------------------------------ */
-const DeutschDB = {
+const GutenDB = {
   Users,
   Subscribers,
   ChatSessions,
@@ -213,7 +213,7 @@ const DeutschDB = {
   usingFallback: () => store.isFallback === true,
 };
 
-window.DeutschDB = DeutschDB;
+window.GutenDB = GutenDB;
 
 if (!DexieLib && !initWarned) {
   initWarned = true;

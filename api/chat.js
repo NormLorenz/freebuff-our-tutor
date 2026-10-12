@@ -1,5 +1,5 @@
 /**
- * chat.js — DeutschLust service Q&A bot
+ * chat.js — GutenTag service Q&A bot
  *
  * Uses the ChatGPT API to answer questions about the services offered.
  * Configure by setting OPENAI_API_KEY in localStorage (key: "openaiApiKey")
@@ -8,7 +8,7 @@
  * If no key is set (or the API call fails), a friendly local "FAQ mode"
  * answers common questions so the site still works fully offline.
  *
- * Exposed as window.DeutschChat.
+ * Exposed as window.GutenChat.
  */
 (function () {
   "use strict";
@@ -17,7 +17,7 @@
   const API_URL = "https://api.openai.com/v1/chat/completions";
 
   const SYSTEM_PROMPT = `
-You are "Bruno", the warm and friendly assistant for DeutschLust — a German
+You are "Bruno", the warm and friendly assistant for GutenTag — a German
 language tutoring school in Berlin run by a husband-and-wife team (Anna and
 Lukas Keller). Answer questions about the school's services only, in the
 language of the user's question (English or German). Be concise (max ~120
@@ -30,7 +30,7 @@ Service facts you may share:
 - Free first trial lesson for everyone. Sign up via the "Sign In / Sign Up" button.
 - AI German tutor is included in every plan, available 24/7 via the "My Tutor" button.
 - Address: Lindenallee 14, 10115 Berlin (Mitte). Phone: +49 30 1234 5678.
-  Email: hallo@deutschlust.example.
+  Email: hallo@gutentag.example.
 - Hours: Mon–Fri 9:00–19:00, Sat 10:00–15:00, Sunday closed.
 - Monthly newsletter with learning tips and events — subscribe in the "Visit" section.
 - Teachers: Anna Keller (head teacher, 12 years experience, from Heidelberg)
@@ -74,7 +74,7 @@ the conversation back with a smile.`;
     {
       match: /(address|location|where|adresse|standort|visit|finden)/i,
       reply: () =>
-        "You'll find us at Lindenallee 14, 10115 Berlin (Mitte). 📍\nPhone: +49 30 1234 5678 · Email: hallo@deutschlust.example\nSwing by — there's usually Streuselkuchen!",
+        "You'll find us at Lindenallee 14, 10115 Berlin (Mitte). 📍\nPhone: +49 30 1234 5678 · Email: hallo@gutentag.example\nSwing by — there's usually Streuselkuchen!",
     },
     {
       match: /(level|beginner|advanced|a1|a2|b1|b2|c1|niveau|anf)/i,
@@ -163,5 +163,5 @@ the conversation back with a smile.`;
     }
   }
 
-  window.DeutschChat = { ask, getApiKey, setApiKey, hasKey: () => !!getApiKey() };
+  window.GutenChat = { ask, getApiKey, setApiKey, hasKey: () => !!getApiKey() };
 })();
