@@ -184,6 +184,7 @@
                 <label class="visually-hidden" for="chatInput">Your question</label>
                 <input type="text" id="chatInput" placeholder="e.g. Do you have evening classes?" maxlength="500" autocomplete="off" />
                 <button type="submit" class="btn btn-primary" aria-label="Send message">Send</button>
+                <button type="button" class="btn btn-ghost btn-small" id="chatClear" aria-label="Clear chat history" title="Clear chat history and start fresh">🗑️ Clear</button>
               </form>
             </div>
           </div>
@@ -340,6 +341,7 @@
       <button class="chip" data-quick="Hallo! Wie geht es dir?">Hallo! Wie geht&apos;s?</button>
       <button class="chip" data-quick="Ich möchte Deutsch üben.">Ich möchte üben</button>
       <button class="chip" data-quick="Can we practice ordering food?">Practice: food</button>
+      <button type="button" class="chip chip-clear" id="tutorClear" aria-label="Clear tutor chat history" title="Clear tutor chat and start fresh">🗑️ Clear</button>
     </div>
     <form class="chat-input-row" id="tutorForm">
       <label class="visually-hidden" for="tutorInput">Message to the tutor</label>

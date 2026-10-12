@@ -268,6 +268,18 @@
     chatInput.focus();
   });
 
+  /* Clear service-chat history */
+  $("#chatClear").addEventListener("click", async () => {
+    chatLog.innerHTML = "";
+    addBubble(
+      chatLog,
+      "🥨 I'm Klaus. Ask me anything about GutenTag — lessons, prices, hours, or our team.",
+      "bot"
+    );
+    if (DB) await DB.ChatSessions.clear("service");
+    chatInput.focus();
+  });
+
   /* ================================================================
      Tutor panel (floating) — via api/tutor.js + DB persistence
      ================================================================ */
@@ -337,8 +349,18 @@
   /* Quick phrases */
   $$(".tutor-panel .chip").forEach((chip) =>
     chip.addEventListener("click", () => {
+      if (chip.classList.contains("chip-clear")) return; // handled separately
       tutorInput.value = chip.dataset.quick;
       tutorForm.requestSubmit();
     })
   );
+
+  /* Clear tutor history */
+  $("#tutorClear").addEventListener("click", async () => {
+    tutorLog.innerHTML = "";
+    tutorMessages = [];
+    addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
+    if (DB) await DB.TutorSessions.clear("tutor");
+    tutorInput.focus();
+  });
 })();

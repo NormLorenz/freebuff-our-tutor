@@ -252,6 +252,10 @@ html[data-theme="dark"] .bubble-user { color: #201812; }
   outline: 2px solid var(--primary); outline-offset: 1px;
 }
 
+/* Clear-history buttons */
+.chat-input-row .btn-small { flex-shrink: 0; }
+.chip-clear:hover { border-color: var(--red-flag); color: var(--red-flag); }
+
 /* ---------- About ---------- */
 .team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 420px)); gap: 1.5rem; justify-content: center; }
 .team-card { text-align: center; }
