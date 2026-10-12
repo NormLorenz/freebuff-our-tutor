@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const MODEL = "gpt-4o-mini";
+  const MODEL = window.OPENAI_MODEL || "gpt-4o-mini";
   const API_URL = "https://api.openai.com/v1/chat/completions";
 
   const SYSTEM_PROMPT = `
