@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeutschLust — Friendly German Tutoring</title>
+  <meta name="description" content="Warm, friendly German lessons for everyone. Learn German with AI tutoring from your first Guten Tag to fluent conversations." />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.8/dist/dexie.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="image/favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <a class="skip-link" href="#home">Skip to content</a>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      <a href="#home" class="brand">
+        <img src="image/logo.svg" alt="DeutschLust logo" class="brand-logo" />
+        <span class="brand-text">Deutsch<span class="accent">Lust</span></span>
+      </a>
+
+      <nav class="main-nav" id="mainNav" aria-label="Main navigation">
+        <a href="#home" class="nav-link">Home</a>
+        <a href="#learn" class="nav-link">Lessons</a>
+        <a href="#visit" class="nav-link">Visit</a>
+        <a href="#about" class="nav-link">About</a>
+        <button class="btn btn-primary btn-small" id="authOpenBtn">Sign In / Sign Up</button>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle light / dark mode">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☀️</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">🌙</span>
+        </button>
+        <button class="icon-btn nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HOME / HERO ===== -->
+  <section class="hero" id="home">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">🥨 Willkommen! Welcome!</p>
+        <h1>Learn German with a <em>warm heart</em> &amp; a friendly smile</h1>
+        <p class="lead">
+          Cozy, patient, and fun German lessons — powered by an AI tutor who never
+          loses its Komma. From your first <strong>„Hallo“</strong> to flowing
+          conversation, we take the journey with you. <em>Gemütlichkeit</em> included.
+        </p>
+        <div class="hero-cta">
+          <a href="#learn" class="btn btn-primary btn-large">Start My German Journey</a>
+          <a href="#about" class="btn btn-ghost btn-large">Meet the Teachers</a>
+        </div>
+        <ul class="hero-points">
+          <li><span aria-hidden="true">🎙️</span> Speak from lesson one — pronunciation coaching included</li>
+          <li><span aria-hidden="true">📈</span> A1 to C1, one friendly step at a time</li>
+          <li><span aria-hidden="true">🤖</span> 24/7 AI tutor practice between lessons</li>
+        </ul>
+      </div>
+      <div class="hero-art">
+        <img src="image/hero.svg" alt="Illustration of cozy German tutoring" class="hero-img" />
+        <div class="hero-badge card">
+          <p class="hero-badge-quote">„Übung macht den Meister!“</p>
+          <p class="hero-badge-sub">Practice makes the master — every day, a little.</p>
+        </div>
+      </div>
+    </div>
+    <div class="hero-wave" aria-hidden="true">
+      <svg viewBox="0 0 1440 90" preserveAspectRatio="none"><path d="M0,40 C240,90 480,0 720,35 C960,70 1200,20 1440,55 L1440,90 L0,90 Z"></path></svg>
+    </div>
+  </section>
+
+  <!-- ===== LESSONS / SIGNUP TEASER ===== -->
+  <section class="section" id="learn">
+    <div class="container">
+      <div class="section-head">
+        <h2>Our German Lessons</h2>
+        <p>Pick the pace that fits your life. Every plan includes unlimited chats with your AI tutor.</p>
+      </div>
+
+      <div class="plan-grid">
+        <article class="plan card">
+          <h3>Prost Beginner</h3>
+          <p class="plan-level">A1 – A2</p>
+          <p class="plan-price">€39<span>/month</span></p>
+          <ul class="plan-list">
+            <li>2× small-group lessons per week</li>
+            <li>Daily 10-min AI tutor drills</li>
+            <li>Vocabulary &amp; beer-garden small talk 😄</li>
+          </ul>
+          <button class="btn btn-outline plan-cta" data-signup>Beginner</button>
+        </article>
+
+        <article class="plan card plan-featured">
+          <div class="plan-flag">Beste Wahl!</div>
+          <h3>Kaffeeklatsch</h3>
+          <p class="plan-level">A2 – B1</p>
+          <p class="plan-price">€59<span>/month</span></p>
+          <ul class="plan-list">
+            <li>3× lessons per week, conversation focused</li>
+            <li>Weekly 1-on-1 video session</li>
+            <li>Unlimited AI tutor conversations</li>
+          </ul>
+          <button class="btn btn-primary plan-cta" data-signup>Kaffeeklatsch</button>
+        </article>
+
+        <article class="plan card">
+          <h3>Autobahn Intensiv</h3>
+          <p class="plan-level">B1 – C1</p>
+          <p class="plan-price">€89<span>/month</span></p>
+          <ul class="plan-list">
+            <li>4× intensive lessons per week</li>
+            <li>Exam prep (Goethe, TestDaF)</li>
+            <li>Business German &amp; presentations</li>
+          </ul>
+          <button class="btn btn-outline plan-cta" data-signup>Intensiv</button>
+        </article>
+      </div>
+
+      <p class="signin-nudge">Already a member? <button class="link-btn" data-signin>Sign in here</button> — dein Tutor awaits!</p>
+    </div>
+  </section>
+
+  <!-- ===== VISIT ===== -->
+  <section class="section section-alt" id="visit">
+    <div class="container">
+      <div class="section-head">
+        <h2>Visit Us</h2>
+        <p>Swing by for a coffee, a chat, and a slice of Streuselkuchen. You are always welcome.</p>
+      </div>
+
+      <div class="visit-grid">
+        <div class="visit-info">
+          <div class="visit-item card">
+            <h3><span aria-hidden="true">📍</span> Address</h3>
+            <p>
+              Lindenallee 14<br />
+              10115 Berlin (Mitte)<br />
+              Germany
+            </p>
+          </div>
+
+          <div class="visit-item card">
+            <h3><span aria-hidden="true">📞</span> Phone &amp; Email</h3>
+            <p>
+              <a href="tel:+493012345678">+49 30 1234 5678</a><br />
+              <a href="mailto:hallo@deutschlust.example">hallo@deutschlust.example</a>
+            </p>
+          </div>
+
+          <div class="visit-item card">
+            <h3><span aria-hidden="true">🕒</span> Opening Hours</h3>
+            <table class="hours-table">
+              <tr><td>Monday – Friday</td><td>9:00 – 19:00</td></tr>
+              <tr><td>Saturday</td><td>10:00 – 15:00</td></tr>
+              <tr><td>Sunday</td><td><em>Geschlossen</em> (closed)</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="visit-connect">
+          <div class="card newsletter-card">
+            <h3>📬 Monthly Newsletter</h3>
+            <p>One cozy email a month: learning tips, German idioms (“Tomaten auf den Augen?”), class news, and events.</p>
+            <form id="newsletterForm" novalidate>
+              <label class="visually-hidden" for="newsEmail">Email address</label>
+              <input type="email" id="newsEmail" name="email" placeholder="you@example.com" required autocomplete="email" />
+              <button type="submit" class="btn btn-primary">Subscribe</button>
+            </form>
+            <p class="form-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="card chat-card">
+            <h3>💬 Ask Our Chat Bot</h3>
+            <p>Curious about lessons, prices, or how it all works? Ask anything — the bot kindly answers.</p>
+            <div class="chat" id="chatWidget">
+              <div class="chat-log" id="chatLog" aria-live="polite"></div>
+              <form class="chat-input-row" id="chatForm">
+                <label class="visually-hidden" for="chatInput">Your question</label>
+                <input type="text" id="chatInput" placeholder="e.g. Do you have evening classes?" maxlength="500" autocomplete="off" />
+                <button type="submit" class="btn btn-primary" aria-label="Send message">Send</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section class="section" id="about">
+    <div class="container">
+      <div class="section-head">
+        <h2>About Us</h2>
+        <p>A husband-and-wife team who fell in love twice — first with each other, then with teaching German.</p>
+      </div>
+
+      <div class="team-grid">
+        <article class="card team-card">
+          <img src="image/anna.svg" alt="Portrait illustration of Anna Keller" class="team-photo" />
+          <h3>Anna Keller</h3>
+          <p class="team-role">👩‍🏫 Co-founder &amp; Head Teacher</p>
+          <p>
+            Born in Heidelberg, Anna taught German for 12 years before co-founding DeutschLust.
+            She believes grammar is best learned over cake and a good conversation. Ask her about
+            the subjunctive — she&apos;ll light up like a Weihnachtsmarkt.
+          </p>
+          <p class="team-funfact">Fun fact: knows all lyrics to “99 Luftballons”… mostly correctly.</p>
+        </article>
+
+        <article class="card team-card">
+          <img src="image/lukas.svg" alt="Portrait illustration of Lukas Keller" class="team-photo" />
+          <h3>Lukas Keller</h3>
+          <p class="team-role">👨‍🏫 Co-founder &amp; Learning Tech Lead</p>
+          <p>
+            Lukas grew up in Dresden and spent a decade building learning software before teaming up
+            with Anna. He designed our AI German tutor and is happiest when a student strings their
+            first long, complicated — and correct — sentence together.
+          </p>
+          <p class="team-funfact">Fun fact: brews a legendary coffee for the Kaffeeklatsch classes.</p>
+        </article>
+      </div>
+
+      <div class="about-values">
+        <div class="value"><span aria-hidden="true">🕯️</span><h3>Gemütlichkeit</h3><p>Cozy, pressure-free classrooms (physical and virtual).</p></div>
+        <div class="value"><span aria-hidden="true">🗣️</span><h3>Sprechen First</h3><p>You speak German from day one — we&apos;ll carry you.</p></div>
+        <div class="value"><span aria-hidden="true">💚</span><h3>Jeder Schritt zählt</h3><p>Every step counts. We celebrate progress, not perfection.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="#home" class="brand footer-brand">
+          <img src="image/logo.svg" alt="" class="brand-logo" /> Deutsch<span class="accent">Lust</span>
+        </a>
+        <p>Friendly German tutoring for every level. <em>Lernen, lachen, wachsen.</em></p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <a href="#home">Home</a>
+        <a href="#learn">Lessons</a>
+        <a href="#visit">Visit</a>
+        <a href="#about">About</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="tel:+493012345678">+49 30 1234 5678</a>
+        <a href="mailto:hallo@deutschlust.example">hallo@deutschlust.example</a>
+        <span>Lindenallee 14, 10115 Berlin</span>
+      </div>
+      <div class="footer-col">
+        <h4>Hours</h4>
+        <span>Mon–Fri: 9:00 – 19:00</span>
+        <span>Sat: 10:00 – 15:00</span>
+        <span>Sun: Closed</span>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <span>© <span id="year"></span> DeutschLust — Made with 💛 and 🥨.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== AUTH MODAL ===== -->
+  <div class="modal-backdrop" id="authModal" hidden>
+    <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <button class="modal-close" id="authClose" aria-label="Close">&times;</button>
+
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab is-active" id="tabSignup" role="tab" aria-selected="true" data-auth-tab="signup">Sign Up</button>
+        <button class="auth-tab" id="tabSignin" role="tab" aria-selected="false" data-auth-tab="signin">Sign In</button>
+      </div>
+
+      <!-- Signup -->
+      <form class="auth-form" id="signupForm" novalidate>
+        <h2 id="authTitle">Join DeutschLust 🎉</h2>
+        <label for="sgName">Your name</label>
+        <input id="sgName" name="name" type="text" required minlength="2" placeholder="e.g. Max Mustermann" autocomplete="name" />
+        <label for="sgEmail">Email</label>
+        <input id="sgEmail" name="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+        <label for="sgPass">Password (min. 8 characters)</label>
+        <input id="sgPass" name="password" type="password" required minlength="8" placeholder="••••••••" autocomplete="new-password" />
+        <label for="sgPlan">Lesson package</label>
+        <select id="sgPlan" name="plan">
+          <option value="beginner">Prost Beginner — A1–A2 (€39/mo)</option>
+          <option value="kaffeeklatsch" selected>Kaffeeklatsch — A2–B1 (€59/mo)</option>
+          <option value="intensiv">Autobahn Intensiv — B1–C1 (€89/mo)</option>
+        </select>
+        <p class="form-msg" id="signupMsg" role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block">Create My Account</button>
+      </form>
+
+      <!-- Sign in -->
+      <form class="auth-form" id="signinForm" novalidate hidden>
+        <h2>Welcome Back 👋</h2>
+        <label for="siEmail">Email</label>
+        <input id="siEmail" name="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+        <label for="siPass">Password</label>
+        <input id="siPass" name="password" type="password" required placeholder="••••••••" autocomplete="current-password" />
+        <p class="form-msg" id="signinMsg" role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+        <button type="button" class="btn btn-ghost btn-block" id="signOutBtn" hidden>Sign Out</button>
+      </form>
+
+      <div class="auth-success" id="authSuccess" hidden>
+        <p class="auth-success-emoji" aria-hidden="true">🎓</p>
+        <h2 id="authSuccessTitle">Auf geht&apos;s!</h2>
+        <p id="authSuccessText"></p>
+        <button class="btn btn-primary btn-block" id="authSuccessClose">Super, danke!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TUTOR PANEL ===== -->
+  <div class="tutor-panel card" id="tutorPanel" hidden aria-label="German AI tutor">
+    <div class="tutor-head">
+      <h3>🇩🇪 AI German Tutor</h3>
+      <button class="icon-btn" id="tutorClose" aria-label="Close tutor">&times;</button>
+    </div>
+    <p class="tutor-hint" id="tutorHint">Write in German (or English) and your tutor will answer in German level <strong id="tutorLevelLabel">A1</strong>, with gentle corrections and English notes.</p>
+    <label class="visually-hidden" for="tutorLevel">CEFR level</label>
+    <select id="tutorLevel" class="tutor-level">
+      <option value="A1">Level: A1 — Beginner</option>
+      <option value="A2">Level: A2 — Elementary</option>
+      <option value="B1">Level: B1 — Intermediate</option>
+      <option value="B2">Level: B2 — Upper intermediate</option>
+      <option value="C1">Level: C1 — Advanced</option>
+    </select>
+    <div class="chat-log" id="tutorLog" aria-live="polite"></div>
+    <div class="tutor-quickrow">
+      <button class="chip" data-quick="Hallo! Wie geht es dir?">Hallo! Wie geht&apos;s?</button>
+      <button class="chip" data-quick="Ich möchte Deutsch üben.">Ich möchte üben</button>
+      <button class="chip" data-quick="Can we practice ordering food?">Practice: food</button>
+    </div>
+    <form class="chat-input-row" id="tutorForm">
+      <label class="visually-hidden" for="tutorInput">Message to the tutor</label>
+      <input type="text" id="tutorInput" placeholder="Schreib hier… (write here)" maxlength="500" autocomplete="off" />
+      <button type="submit" class="btn btn-primary" aria-label="Send to tutor">Send</button>
+    </form>
+  </div>
+
+  <!-- Floating tutor button -->
+  <button class="btn btn-primary tutor-fab" id="tutorFab" aria-label="Open German tutor">
+    🇩🇪 <span>My Tutor</span>
+  </button>
+
+  <script src="../api/db.js"></script>
+  <script src="../api/chat.js"></script>
+  <script src="../api/tutor.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
