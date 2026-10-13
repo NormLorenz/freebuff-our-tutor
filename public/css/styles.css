@@ -187,13 +187,6 @@ html[data-theme="dark"] .theme-icon-moon { display: inline; }
 .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
 .plan { position: relative; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .plan:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
-.plan-featured { border: 2px solid var(--gold); }
-.plan-flag {
-  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-  background: var(--red-flag); color: #fff; font-size: 0.8rem; font-weight: 800;
-  padding: 0.25rem 0.9rem; border-radius: 999px; letter-spacing: 0.5px;
-}
-html[data-theme="dark"] .plan-flag { color: #201812; background: var(--red-flag); }
 .plan-level { color: var(--accent); font-weight: 700; margin: -0.3em 0 0.6em; }
 .plan-price { font-size: 2rem; font-weight: 800; font-family: var(--font-head); }
 .plan-price span { font-size: 0.95rem; color: var(--text-soft); font-weight: 400; }
@@ -204,7 +197,7 @@ html[data-theme="dark"] .plan-flag { color: #201812; background: var(--red-flag)
 .nav-user { color: var(--text-soft); font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
 
 /* ---------- Visit ---------- */
-.visit-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; align-items: start; }
+.visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
 .visit-info { display: grid; gap: 1.2rem; }
 .visit-item h3 { font-size: 1.1rem; }
 .hours-table { width: 100%; border-collapse: collapse; }
@@ -246,7 +239,7 @@ html[data-theme="dark"] .bubble-user { color: #201812; }
 
 .chat-input-row { display: flex; gap: 0.5rem; }
 .chat-input-row input {
-  flex: 1; padding: 0.6rem 0.9rem; border-radius: var(--radius-small);
+  flex: 1 1 auto; min-width: 0; padding: 0.6rem 0.9rem; border-radius: var(--radius-small);
   border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
 }
 .chat-input-row input:focus, #newsletterForm input:focus, .auth-form input:focus, .auth-form select:focus, .tutor-level:focus {
@@ -344,6 +337,15 @@ html[data-theme="dark"] .auth-tab.is-active { color: #201812; }
   }
   .main-nav.open { transform: translateY(0); }
   .nav-burger { display: inline-flex; }
+}
+
+/* Phones: chat rows (service bot + tutor) stack vertically so input and
+   buttons never overflow narrow screens */
+@media (max-width: 600px) {
+  .chat-input-row { flex-wrap: wrap; }
+  .chat-input-row input { flex: 1 1 100%; }
+  .chat-input-row .btn { flex: 1; }
+  #newsletterForm input { min-width: 0; }
 }
 
 /* ---------- Reduced motion ---------- */
