@@ -26,6 +26,8 @@
         <a href="#learn" class="nav-link">Lessons</a>
         <a href="#visit" class="nav-link">Visit</a>
         <a href="#about" class="nav-link">About</a>
+        <a href="#tutor" class="nav-link nav-link-tutor" id="tutorNavLink" hidden>My Tutor</a>
+        <span class="nav-user" id="navUser" hidden></span>
         <button class="btn btn-primary btn-small" id="authOpenBtn">Sign In / Sign Up</button>
       </nav>
 
@@ -235,6 +237,42 @@
     </div>
   </section>
 
+  <!-- ===== MY TUTOR ===== -->
+  <section class="section section-alt" id="tutor" hidden>
+    <div class="container">
+      <div class="section-head">
+        <h2>My Tutor</h2>
+        <p>Your personal AI German tutor, available around the clock. <em>Übung macht den Meister!</em></p>
+      </div>
+      <div class="tutor-panel card" id="tutorPanel" aria-label="German AI tutor">
+        <div class="tutor-head">
+          <h3>🇩🇪 AI German Tutor</h3>
+        </div>
+        <p class="tutor-hint" id="tutorHint">Write in German (or English) and your tutor will answer in German level <strong id="tutorLevelLabel">A1</strong>, with gentle corrections and English notes.</p>
+        <label class="visually-hidden" for="tutorLevel">CEFR level</label>
+        <select id="tutorLevel" class="tutor-level">
+          <option value="A1">Level: A1 — Beginner</option>
+          <option value="A2">Level: A2 — Elementary</option>
+          <option value="B1">Level: B1 — Intermediate</option>
+          <option value="B2">Level: B2 — Upper intermediate</option>
+          <option value="C1">Level: C1 — Advanced</option>
+        </select>
+        <div class="chat-log" id="tutorLog" aria-live="polite"></div>
+        <div class="tutor-quickrow">
+          <button class="chip" data-quick="Hallo! Wie geht es dir?">Hallo! Wie geht&apos;s?</button>
+          <button class="chip" data-quick="Ich möchte Deutsch üben.">Ich möchte üben</button>
+          <button class="chip" data-quick="Can we practice ordering food?">Practice: food</button>
+          <button type="button" class="chip chip-clear" id="tutorClear" aria-label="Clear tutor chat history" title="Clear tutor chat and start fresh">🗑️ Clear</button>
+        </div>
+        <form class="chat-input-row" id="tutorForm">
+          <label class="visually-hidden" for="tutorInput">Message to the tutor</label>
+          <input type="text" id="tutorInput" placeholder="Schreib hier… (write here)" maxlength="500" autocomplete="off" />
+          <button type="submit" class="btn btn-primary" aria-label="Send to tutor">Send</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== FOOTER ===== -->
   <footer class="site-footer">
     <div class="container footer-grid">
@@ -320,40 +358,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ===== TUTOR PANEL ===== -->
-  <div class="tutor-panel card" id="tutorPanel" hidden aria-label="German AI tutor">
-    <div class="tutor-head">
-      <h3>🇩🇪 AI German Tutor</h3>
-      <button class="icon-btn" id="tutorClose" aria-label="Close tutor">&times;</button>
-    </div>
-    <p class="tutor-hint" id="tutorHint">Write in German (or English) and your tutor will answer in German level <strong id="tutorLevelLabel">A1</strong>, with gentle corrections and English notes.</p>
-    <label class="visually-hidden" for="tutorLevel">CEFR level</label>
-    <select id="tutorLevel" class="tutor-level">
-      <option value="A1">Level: A1 — Beginner</option>
-      <option value="A2">Level: A2 — Elementary</option>
-      <option value="B1">Level: B1 — Intermediate</option>
-      <option value="B2">Level: B2 — Upper intermediate</option>
-      <option value="C1">Level: C1 — Advanced</option>
-    </select>
-    <div class="chat-log" id="tutorLog" aria-live="polite"></div>
-    <div class="tutor-quickrow">
-      <button class="chip" data-quick="Hallo! Wie geht es dir?">Hallo! Wie geht&apos;s?</button>
-      <button class="chip" data-quick="Ich möchte Deutsch üben.">Ich möchte üben</button>
-      <button class="chip" data-quick="Can we practice ordering food?">Practice: food</button>
-      <button type="button" class="chip chip-clear" id="tutorClear" aria-label="Clear tutor chat history" title="Clear tutor chat and start fresh">🗑️ Clear</button>
-    </div>
-    <form class="chat-input-row" id="tutorForm">
-      <label class="visually-hidden" for="tutorInput">Message to the tutor</label>
-      <input type="text" id="tutorInput" placeholder="Schreib hier… (write here)" maxlength="500" autocomplete="off" />
-      <button type="submit" class="btn btn-primary" aria-label="Send to tutor">Send</button>
-    </form>
-  </div>
-
-  <!-- Floating tutor button -->
-  <button class="btn btn-primary tutor-fab" id="tutorFab" aria-label="Open German tutor">
-    🇩🇪 <span>My Tutor</span>
-  </button>
 
   <script src="../api/db.js"></script>
   <script src="../api/chat.js"></script>

@@ -201,6 +201,7 @@ html[data-theme="dark"] .plan-flag { color: #201812; background: var(--red-flag)
 .plan-list li { padding: 0.35rem 0; }
 .plan-list li::before { content: "✓"; color: var(--accent); font-weight: 800; margin-right: 0.5rem; }
 .signin-nudge { text-align: center; margin: 2rem 0 0; color: var(--text-soft); }
+.nav-user { color: var(--text-soft); font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
 
 /* ---------- Visit ---------- */
 .visit-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; align-items: start; }
@@ -308,26 +309,21 @@ html[data-theme="dark"] .auth-tab.is-active { color: #201812; }
 .auth-success { text-align: center; }
 .auth-success-emoji { font-size: 3rem; margin: 0; }
 
-/* ---------- Tutor panel ---------- */
+/* ---------- Tutor panel (in-page "My Tutor" section) ---------- */
 .tutor-panel {
-  position: fixed; right: 1.2rem; bottom: 6rem; z-index: 140;
-  width: min(370px, calc(100vw - 2rem)); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;
-  box-shadow: var(--shadow);
+  width: min(560px, 100%); margin: 0 auto; padding: 1.2rem;
+  display: flex; flex-direction: column; gap: 0.8rem;
 }
 .tutor-head { display: flex; justify-content: space-between; align-items: center; }
 .tutor-head h3 { margin: 0; font-size: 1.05rem; }
 .tutor-hint { font-size: 0.85rem; color: var(--text-soft); margin: 0; }
-.tutor-level { padding: 0.4rem 0.6rem; border-radius: var(--radius-small); border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
+.tutor-level { align-self: flex-start; padding: 0.4rem 0.6rem; border-radius: var(--radius-small); border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
 .tutor-quickrow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .chip {
   border: 1.5px solid var(--border); background: var(--bg-alt); color: var(--text-soft);
   border-radius: 999px; padding: 0.3rem 0.8rem; font-size: 0.82rem;
 }
 .chip:hover { border-color: var(--primary); color: var(--primary); }
-.tutor-fab {
-  position: fixed; right: 1.2rem; bottom: 1.2rem; z-index: 140;
-  border-radius: 999px; padding: 0.8rem 1.3rem; font-size: 1rem;
-}
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {

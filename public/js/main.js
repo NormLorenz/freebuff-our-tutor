@@ -105,6 +105,20 @@
     }
   });
 
+  /*
+     Tutor section state — declared before the auth section below because
+     the session-restore code calls refreshAuthState(), which renders the
+     tutor history into the My Tutor section.
+   */
+  const panel = $("#tutor");
+  const tutorLog = $("#tutorLog");
+  const tutorForm = $("#tutorForm");
+  const tutorInput = $("#tutorInput");
+  const levelSelect = $("#tutorLevel");
+  let tutorBusy = false;
+  let tutorMessages = [];
+  let tutorLoaded = false;
+
   /* ================================================================
      Auth modal (signup / signin)
      ================================================================ */
@@ -141,10 +155,28 @@
 
   function refreshAuthState() {
     $("#signOutBtn").hidden = !currentUser;
+    const authBtn = $("#authOpenBtn");
+    authBtn.textContent = currentUser ? "Sign Out" : "Sign In / Sign Up";
+    const navUser = $("#navUser");
+    navUser.hidden = !currentUser;
+    navUser.textContent = currentUser ? "Hi, " + currentUser.name + "!" : "";
+    $("#tutorNavLink").hidden = !currentUser;
+    $("#tutor").hidden = !currentUser; // My Tutor section appears when signed in
     if (currentUser) {
       $("#signinMsg").textContent = "Angemeldet als " + currentUser.name + " (" + currentUser.plan + ").";
       $("#signinMsg").className = "form-msg ok";
+      loadTutorHistory();
+    } else {
+      tutorLoaded = false;
     }
+  }
+
+  function signOut() {
+    currentUser = null;
+    localStorage.removeItem("dl-user");
+    refreshAuthState();
+    closeAuth();
+    formMsg($("#signinMsg"), "Signed out. Bis bald! 👋", true);
   }
 
   function showSuccess(title, text) {
@@ -156,7 +188,13 @@
     $("#authSuccessText").textContent = text;
   }
 
-  $("#authOpenBtn").addEventListener("click", () => openAuth(currentUser ? "signin" : "signup"));
+  $("#authOpenBtn").addEventListener("click", () => {
+    if (currentUser) {
+      signOut();
+    } else {
+      openAuth("signup");
+    }
+  });
   $$(".plan-cta, [data-signup]").forEach((btn) =>
     btn.addEventListener("click", () => openAuth("signup"))
   );
@@ -183,7 +221,7 @@
       localStorage.setItem("dl-user", JSON.stringify(user));
       showSuccess(
         "Vollständig! 🎉",
-        "Welcome to GutenTag, " + user.name + "! Your " + user.plan + " package is reserved. Check the Visit section for trial times — and don't forget your AI tutor (bottom right!)."
+        "Welcome to GutenTag, " + user.name + "! Your " + user.plan + " package is reserved. Check the Visit section for trial times — and don't forget your AI tutor in the My Tutor section!"
       );
       refreshAuthState();
     } catch (err) {
@@ -199,19 +237,15 @@
     try {
       currentUser = await DB.Users.authenticate($("#siEmail").value, $("#siPass").value);
       localStorage.setItem("dl-user", JSON.stringify(currentUser));
-      showSuccess("Willkommen zurück! 👋", "Schön, dich wiederzusehen, " + currentUser.name + "! Ready to practice? Tap „My Tutor\" below. Viel Erfolg!");
+      showSuccess("Willkommen zurück! 👋", "Schön, dich wiederzusehen, " + currentUser.name + "! Ready to practice? Open the My Tutor section above. Viel Erfolg!");
+      refreshAuthState(); // sync header button + nav immediately (was missing → header said "Sign In / Sign Up" and clicking it signed you out)
     } catch (err) {
       formMsg(msgEl, err.message, false);
     }
   });
 
-  /* Sign out */
-  $("#signOutBtn").addEventListener("click", () => {
-    currentUser = null;
-    localStorage.removeItem("dl-user");
-    refreshAuthState();
-    formMsg($("#signinMsg"), "Signed out. Bis bald! 👋", true);
-  });
+  /* Sign out (modal button) */
+  $("#signOutBtn").addEventListener("click", signOut);
 
   /* Restore session */
   try {
@@ -281,32 +315,18 @@
   });
 
   /* ================================================================
-     Tutor panel (floating) — via api/tutor.js + DB persistence
+     Tutor section (My Tutor) — via api/tutor.js + DB persistence
      ================================================================ */
-  const panel = $("#tutorPanel");
-  const tutorLog = $("#tutorLog");
-  const tutorForm = $("#tutorForm");
-  const tutorInput = $("#tutorInput");
-  const levelSelect = $("#tutorLevel");
-  let tutorBusy = false;
-  let tutorMessages = [];
-
-  $("#tutorFab").addEventListener("click", async () => {
-    panel.hidden = false;
-    $("#tutorFab").style.display = "none";
-    if (!DB) return;
+  async function loadTutorHistory() {
+    if (!DB || tutorLoaded) return;
+    tutorLoaded = true;
     tutorMessages = await DB.TutorSessions.load("tutor");
     tutorLog.innerHTML = "";
     tutorMessages.forEach((m) => addBubble(tutorLog, m.text, m.role));
     if (!tutorMessages.length) {
       addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
     }
-  });
-
-  $("#tutorClose").addEventListener("click", () => {
-    panel.hidden = true;
-    $("#tutorFab").style.display = "";
-  });
+  }
 
   levelSelect.addEventListener("change", async () => {
     const level = levelSelect.value;
