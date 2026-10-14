@@ -114,7 +114,7 @@
   const tutorLog = $("#tutorLog");
   const tutorForm = $("#tutorForm");
   const tutorInput = $("#tutorInput");
-  const levelSelect = $("#tutorLevel");
+  let tutorLevel = "A1"; // always taken from the user's record (plan-seeded)
   let tutorBusy = false;
   let tutorMessages = [];
   let tutorLoaded = false;
@@ -225,7 +225,7 @@
       const tier = DB.PLANS[user.plan];
       showSuccess(
         "Vollständig! 🎉",
-        "Welcome to GutenTag, " + user.name + "! Your " + tier.label + " (" + tier.range + ") plan is set and your tutor starts you at German level " + user.tutorLevel + " — change it any time in the My Tutor section. Check the Visit section for trial times!"
+        "Welcome to GutenTag, " + user.name + "! Your " + tier.label + " (" + tier.range + ") plan is set and your tutor will answer at German level " + user.tutorLevel + ". Check the Visit section for trial times!"
       );
       refreshAuthState();
     } catch (err) {
@@ -332,27 +332,15 @@
     }
   }
 
-  levelSelect.addEventListener("change", async () => {
-    const level = levelSelect.value;
-    $("#tutorLevelLabel").textContent = level;
-    // The tutor level is a property of the signed-in user (users.tutorLevel).
-    if (DB && currentUser) {
-      const updated = await DB.Users.setLevel(currentUser.email, level);
-      if (updated) {
-        currentUser = updated; // keep the session record in sync
-        try { localStorage.setItem("dl-user", JSON.stringify(currentUser)); } catch (_) { /* ok */ }
-      }
-    }
-  });
-
   /* Start (or restore) a tutor session at the user's current level — which
-     was seeded from their lesson plan at signup, and can drift up from there. */
+     is seeded from their lesson plan at signup. There is no level picker in
+     the UI; the displayed hint simply reflects the user's stored level. */
   async function syncTutorLevelFromUser() {
     if (!DB || !currentUser) return;
     const user = await DB.Users.findByEmail(currentUser.email);
     const level = user?.tutorLevel ?? currentUser.tutorLevel; // DB wins over the cached session
     if (!level) return;
-    levelSelect.value = level;
+    tutorLevel = level;
     $("#tutorLevelLabel").textContent = level;
   }
 
@@ -369,7 +357,7 @@
 
     const history = tutorMessages.map((m) => ({ role: m.role, content: m.text }));
 
-    const answer = await Tutor.reply(q, levelSelect.value, history.slice(0, -1));
+    const answer = await Tutor.reply(q, tutorLevel, history.slice(0, -1));
     typing.remove();
     addBubble(tutorLog, answer.text, "bot");
     tutorMessages.push({ role: "assistant", text: answer.text });

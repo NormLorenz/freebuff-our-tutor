@@ -80,8 +80,8 @@ the chat bots in offline/local-fallback mode.
 - **Sign up / Sign in** — via the header button (or the plan CTAs in the
   Lessons section). Your session is remembered until you sign out.
 - **My Tutor** — appears in the nav once you're signed in; the tutor starts
-  each session at the level your lesson plan implies (adjustable in the
-  section's level dropdown, saved on your user record), and remembers your
+  each session at the level your lesson plan implies (kept on your user
+  record), and remembers your
   conversation (clear it any time with the 🗑️ button).
 - **Sign out** — the header's "Sign Out" button (or the button inside the
   auth modal) ends the session and hides the tutor section again.

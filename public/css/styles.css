@@ -242,7 +242,7 @@ html[data-theme="dark"] .bubble-user { color: #201812; }
   flex: 1 1 auto; min-width: 0; padding: 0.6rem 0.9rem; border-radius: var(--radius-small);
   border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
 }
-.chat-input-row input:focus, #newsletterForm input:focus, .auth-form input:focus, .auth-form select:focus, .tutor-level:focus {
+.chat-input-row input:focus, #newsletterForm input:focus, .auth-form input:focus, .auth-form select:focus {
   outline: 2px solid var(--primary); outline-offset: 1px;
 }
 
@@ -310,7 +310,6 @@ html[data-theme="dark"] .auth-tab.is-active { color: #201812; }
 .tutor-head { display: flex; justify-content: space-between; align-items: center; }
 .tutor-head h3 { margin: 0; font-size: 1.05rem; }
 .tutor-hint { font-size: 0.85rem; color: var(--text-soft); margin: 0; }
-.tutor-level { align-self: flex-start; padding: 0.4rem 0.6rem; border-radius: var(--radius-small); border: 1.5px solid var(--border); background: var(--bg); color: var(--text); }
 .tutor-quickrow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .chip {
   border: 1.5px solid var(--border); background: var(--bg-alt); color: var(--text-soft);
