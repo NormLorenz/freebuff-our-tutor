@@ -15,23 +15,27 @@ A single-page marketing + learning site with three AI-powered pieces:
    that writes German at your CEFR level (A1–C1) with gentle corrections and
    English notes. You reach it via the "My Tutor" nav link that appears once
    you are signed in.
-3. **Local accounts** — sign up (name, email, password, lesson package) or sign
-   in through the auth modal. While signed in, the header button turns into
-   **Sign Out** with a "Hi, *name*!" greeting next to it, and your tutor chat
-   history persists between visits. Everything is stored client-side
+3. **Local accounts** — sign up (name, email, password, and a lesson level:
+   Beginner A1–A2, Intermediate A2–B1, or Advanced B1–C1) or sign in through
+   the auth modal. The chosen plan is stored on the user and seeds the AI
+   tutor's starting level for every tutor session. While signed in, the
+   header button turns into **Sign Out** with a "Hi, *name*!" greeting next
+   to it, and your chosen CEFR level plus your tutor chat history persist
+   between visits. Everything is
+   stored client-side
    (Dexie/IndexedDB + `localStorage` for the session), so there is no backend
    account database — this is deliberately demo-grade, not production auth.
 
 The rest is a cozy landing page: hero, three equally-presented lesson plans
-(Prost Beginner €39, Kaffeeklatsch €59, Autobahn Intensiv €89), Visit section
+(Beginner €39, Intermediate €59, Advanced €89), Visit section
 with address/phone/hours plus newsletter signup, About the husband-and-wife
 team, and a footer. Light/dark theme toggle, fully responsive down to phone
 sizes, and graceful fallbacks when offline or without an OpenAI key.
 
 ## What's inside
 
-- **Marketing site** (`public/index.html`) — hero, lesson plans (Prost
-  Beginner → Kaffeeklatsch → Autobahn Intensiv), visit/contact info with
+- **Marketing site** (`public/index.html`) — hero, lesson plans (Beginner
+  €39 → Intermediate €59 → Advanced €89), visit/contact info with
   newsletter signup and the chat bot, about the husband-and-wife team, and a
   sign-in/sign-up modal.
 - **AI service chat bot** (`api/chat.js`) — answers questions about lessons,
@@ -75,9 +79,10 @@ the chat bots in offline/local-fallback mode.
 
 - **Sign up / Sign in** — via the header button (or the plan CTAs in the
   Lessons section). Your session is remembered until you sign out.
-- **My Tutor** — appears in the nav once you're signed in; the tutor chats at
-  your chosen CEFR level and remembers your conversation (clear it any time
-  with the 🗑️ button).
+- **My Tutor** — appears in the nav once you're signed in; the tutor starts
+  each session at the level your lesson plan implies (adjustable in the
+  section's level dropdown, saved on your user record), and remembers your
+  conversation (clear it any time with the 🗑️ button).
 - **Sign out** — the header's "Sign Out" button (or the button inside the
   auth modal) ends the session and hides the tutor section again.
 

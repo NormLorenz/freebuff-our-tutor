@@ -3,17 +3,17 @@
  * Uses Dexie.js (IndexedDB wrapper) to persist user + application data.
  *
  * Tables:
- *   users        — signed-up students { email, name, passwordHash, plan, createdAt }
+ *   users        — signed-up students { email, name, passwordHash, plan,
+ *                  tutorLevel, createdAt }; plan: beginner/intermediate/advanced
  *   subscribers  — monthly newsletter signups { email, subscribedAt }
- *   chatSessions — service Q&A bot conversations { userId|email, messages[], updatedAt }
- *   tutorSessions— German tutor conversations { level, messages[], updatedAt }
- *   settings     — app preferences { key, value } (e.g. theme, tutorLevel)
+ *   chatSessions — service-bot conversations { key, messages[], updatedAt }
+ *   tutorSessions— German tutor conversations { key, messages[], updatedAt }
+ *   settings     — app preferences { key, value } (e.g. theme)
  *
  * Exposed globally as window.GutenDB (plain script, no imports needed).
  */
 
 let DexieLib = window.Dexie;
-let initWarned = false;
 
 if (!DexieLib) {
   // Dexie script failed to load (offline / CDN blocked) — degrade gracefully.
@@ -25,6 +25,25 @@ const db = DexieLib
   ? new DexieLib("GutenTagDB")
   : null;
 
+/* ------------------------------------------------------------------ */
+/* Lesson plans — stored on the user at signup, and used to seed the   */
+/* tutor's starting level when a tutor session begins.                 */
+/* ------------------------------------------------------------------ */
+const PLANS = {
+  beginner: { label: "Beginner", range: "A1–A2", startLevel: "A1" },
+  intermediate: { label: "Intermediate", range: "A2–B1", startLevel: "A2" },
+  advanced: { label: "Advanced", range: "B1–C1", startLevel: "B1" },
+};
+
+/* Old package names (pre-tier era) map onto the three tiers.           */
+const LEGACY_PLAN_MAP = {
+  beginner: "beginner",
+  prost: "beginner",
+  kaffeeklatsch: "intermediate",
+  intensiv: "advanced",
+  autobahn: "advanced",
+};
+
 if (db) {
   db.version(1).stores({
     users: "++id, &email, name, plan, createdAt",
@@ -33,40 +52,65 @@ if (db) {
     tutorSessions: "++id, &key, updatedAt",
     settings: "&key",
   });
+  /* v2 — the per-user tutor level lives on users. Plan data is kept
+   * untouched here so v3 can map legacy package names onto tiers.        */
+  db.version(2)
+    .stores({
+      users: "++id, &email, name, tutorLevel, createdAt",
+    })
+    .upgrade(async (tx) => {
+      await tx.table("users").toCollection().modify((user) => {
+        user.tutorLevel = user.tutorLevel ?? "A1";
+      });
+      // tutorLevel no longer lives in settings.
+      await tx.table("settings").where("key").equals("tutorLevel").delete();
+    });
+  /* v3 — the lesson plan becomes a three-tier field (beginner /
+   * intermediate / advanced), re-indexed so it can seed tutor sessions.  */
+  db.version(3)
+    .stores({
+      users: "++id, &email, name, plan, tutorLevel, createdAt",
+    })
+    .upgrade(async (tx) => {
+      await tx.table("users").toCollection().modify((user) => {
+        user.plan = LEGACY_PLAN_MAP[user.plan] ?? "intermediate";
+        // A1 means "level never chosen by the user" (the v2 default), so
+        // give those users the starting level their mapped plan implies.
+        const startLevel = PLANS[user.plan].startLevel;
+        if (user.tutorLevel === "A1" && startLevel !== "A1") {
+          user.tutorLevel = startLevel;
+        }
+      });
+    });
 }
 
 /* ------------------------------------------------------------------ */
 /* In-memory fallback (when IndexedDB/Dexie is unavailable)            */
 /* ------------------------------------------------------------------ */
 function makeMemoryStore() {
-  const store = { users: [], subscribers: [], chatSessions: [], tutorSessions: [], settings: [] };
+  const tables = { users: [], subscribers: [], chatSessions: [], tutorSessions: [], settings: [] };
   let seq = 1;
-  const norm = (table) => (store[table] ??= []);
+  const norm = (table) => (tables[table] ??= []);
   return {
     async add(table, obj) {
       const row = { ...obj, id: seq++ };
       norm(table).push(row);
       return row.id;
     },
-    async get(table, key) { return norm(table).find((r) => r.id === key) || null; },
     async put(table, obj) {
       const arr = norm(table);
       const i = arr.findIndex((r) => r.id === obj.id);
       if (i >= 0) arr[i] = { ...obj }; else arr.push({ ...obj, id: seq++ });
       return obj.id;
     },
-    async where(table, field, value) { return norm(table).filter((r) => r[field] === value); },
-    async table(table) { return norm(table).slice(); },
+    async get(table, key) { return norm(table).find((r) => r.id === key) || null; },
     async delete(table, key) {
       const arr = norm(table);
       const i = arr.findIndex((r) => r.id === key);
       if (i >= 0) arr.splice(i, 1);
     },
-    async getSetting(key) { const s = store.settings.find((r) => r.key === key); return s ? s.value : undefined; },
-    async setSetting(key, value) {
-      const s = store.settings.find((r) => r.key === key);
-      if (s) s.value = value; else store.settings.push({ key, value });
-    },
+    async where(table, field, value) { return norm(table).filter((r) => r[field] === value); },
+    async table(table) { return norm(table).slice(); },
     isFallback: true,
   };
 }
@@ -74,19 +118,14 @@ function makeMemoryStore() {
 function makeDexieAdapter() {
   return {
     async add(table, obj) { return db[table].add(obj); },
+    async put(table, obj) { return db[table].put(obj); },
     async get(table, key) {
       const row = await db[table].get(key);
       return row ?? null;
     },
-    async put(table, obj) { return db[table].put(obj); },
+    async delete(table, key) { return db[table].delete(key); },
     async where(table, field, value) { return db[table].where(field).equals(value).toArray(); },
     async table(table) { return db[table].toArray(); },
-    async delete(table, key) { return db[table].delete(key); },
-    async getSetting(key) {
-      const row = await db.settings.get(key);
-      return row ? row.value : undefined;
-    },
-    async setSetting(key, value) { return db.settings.put({ key, value }); },
     isFallback: false,
   };
 }
@@ -109,11 +148,13 @@ async function hashPassword(password) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Users                                                              */
+/* Users                                                               */
 /* ------------------------------------------------------------------ */
 const Users = {
-  async create({ name, email, password, plan = "kaffeeklatsch" }) {
+  async create({ name, email, password, plan = "intermediate" }) {
     email = email.trim().toLowerCase();
+    const tier = PLANS[plan];
+    if (!tier) throw new Error("Unknown lesson plan: " + plan);
     const existing = await store.where("users", "email", email);
     if (existing.length) throw new Error("This email is already registered. Bitte melde dich an!");
     const user = {
@@ -121,6 +162,7 @@ const Users = {
       email,
       passwordHash: await hashPassword(password),
       plan,
+      tutorLevel: tier.startLevel, // the plan seeds the tutor's level
       createdAt: Date.now(),
     };
     const id = await store.add("users", user);
@@ -141,23 +183,32 @@ const Users = {
     const { passwordHash, ...safe } = user;
     return safe;
   },
+
+  /* Save the tutor level (a per-user property of the user record). */
+  async setLevel(email, tutorLevel) {
+    const user = await Users.findByEmail(email);
+    if (!user) return null;
+    await store.put("users", { ...user, tutorLevel });
+    return { ...user, tutorLevel, passwordHash: undefined };
+  },
 };
 
 /* ------------------------------------------------------------------ */
-/* Newsletter subscribers                                             */
+/* Newsletter subscribers                                              */
 /* ------------------------------------------------------------------ */
 const Subscribers = {
   async subscribe(email) {
     email = String(email || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("That email looks a little off — check it please?");
     const existing = await store.where("subscribers", "email", email);
-    if (existing.length) return { already: true };
-    const unsub = existing[0];
-    if (unsub?.unsubscribed) {
-      await store.put("subscribers", { ...unsub, unsubscribed: false, subscribedAt: Date.now() });
-    } else {
-      await store.add("subscribers", { email, subscribedAt: Date.now(), unsubscribed: false });
+    if (existing[0]) {
+      if (existing[0].unsubscribed) {
+        await store.put("subscribers", { ...existing[0], unsubscribed: false, subscribedAt: Date.now() });
+        return { already: false }; // resubscribed
+      }
+      return { already: true };
     }
+    await store.add("subscribers", { email, subscribedAt: Date.now(), unsubscribed: false });
     return { already: false };
   },
 
@@ -168,7 +219,7 @@ const Subscribers = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Chat sessions (service bot + tutor)                                */
+/* Chat sessions (service bot + tutor), keyed by conversation key       */
 /* ------------------------------------------------------------------ */
 function sessionApi(table) {
   return {
@@ -193,15 +244,24 @@ const ChatSessions = sessionApi("chatSessions");
 const TutorSessions = sessionApi("tutorSessions");
 
 /* ------------------------------------------------------------------ */
-/* Settings (theme, tutor level, last user)                           */
+/* Settings — app preferences (theme). Key/value rows in the settings  */
+/* table; the tutor level deliberately lives on the user instead.      */
 /* ------------------------------------------------------------------ */
 const Settings = {
-  get: (key) => store.getSetting(key),
-  set: (key, value) => store.setSetting(key, value),
+  async get(key) {
+    const rows = await store.where("settings", "key", key);
+    return rows[0]?.value;
+  },
+  async set(key, value) {
+    const rows = await store.where("settings", "key", key);
+    if (rows[0]) await store.put("settings", { ...rows[0], value });
+    else await store.add("settings", { key, value });
+    return value;
+  },
 };
 
 /* ------------------------------------------------------------------ */
-/* Global export + health check                                       */
+/* Global export + health check                                        */
 /* ------------------------------------------------------------------ */
 const GutenDB = {
   Users,
@@ -209,13 +269,13 @@ const GutenDB = {
   ChatSessions,
   TutorSessions,
   Settings,
+  PLANS,
   isReady: () => !!DexieLib,
   usingFallback: () => store.isFallback === true,
 };
 
 window.GutenDB = GutenDB;
 
-if (!DexieLib && !initWarned) {
-  initWarned = true;
+if (!DexieLib) {
   console.info("[db] Running without IndexedDB persistence — data will not survive reloads.");
 }

@@ -87,7 +87,7 @@
 
       <div class="plan-grid">
         <article class="plan card">
-          <h3>Prost Beginner</h3>
+          <h3>Beginner</h3>
           <p class="plan-level">A1 – A2</p>
           <p class="plan-price">€39<span>/month</span></p>
           <ul class="plan-list">
@@ -99,7 +99,7 @@
         </article>
 
         <article class="plan card">
-          <h3>Kaffeeklatsch</h3>
+          <h3>Intermediate</h3>
           <p class="plan-level">A2 – B1</p>
           <p class="plan-price">€59<span>/month</span></p>
           <ul class="plan-list">
@@ -107,11 +107,11 @@
             <li>Weekly 1-on-1 video session</li>
             <li>Unlimited AI tutor conversations</li>
           </ul>
-          <button class="btn btn-outline plan-cta" data-signup>Kaffeeklatsch</button>
+          <button class="btn btn-outline plan-cta" data-signup>Intermediate</button>
         </article>
 
         <article class="plan card">
-          <h3>Autobahn Intensiv</h3>
+          <h3>Advanced</h3>
           <p class="plan-level">B1 – C1</p>
           <p class="plan-price">€89<span>/month</span></p>
           <ul class="plan-list">
@@ -119,7 +119,7 @@
             <li>Exam prep (Goethe, TestDaF)</li>
             <li>Business German &amp; presentations</li>
           </ul>
-          <button class="btn btn-outline plan-cta" data-signup>Intensiv</button>
+          <button class="btn btn-outline plan-cta" data-signup>Advanced</button>
         </article>
       </div>
 
@@ -223,8 +223,7 @@
             Lukas grew up in Dresden and spent a decade building learning software before teaming up
             with Anna. He designed our AI German tutor and is happiest when a student strings their
             first long, complicated — and correct — sentence together.
-          </p>
-          <p class="team-funfact">Fun fact: brews a legendary coffee for the Kaffeeklatsch classes.</p>
+          </p>            <p class="team-funfact">Fun fact: brews a legendary coffee for the coffee break in the Intermediate classes.</p>
         </article>
       </div>
 
@@ -327,11 +326,11 @@
         <input id="sgEmail" name="email" type="email" required placeholder="you@example.com" autocomplete="email" />
         <label for="sgPass">Password (min. 8 characters)</label>
         <input id="sgPass" name="password" type="password" required minlength="8" placeholder="••••••••" autocomplete="new-password" />
-        <label for="sgPlan">Lesson package</label>
+        <label for="sgPlan">Lesson level</label>
         <select id="sgPlan" name="plan">
-          <option value="beginner">Prost Beginner — A1–A2 (€39/mo)</option>
-          <option value="kaffeeklatsch" selected>Kaffeeklatsch — A2–B1 (€59/mo)</option>
-          <option value="intensiv">Autobahn Intensiv — B1–C1 (€89/mo)</option>
+          <option value="beginner" selected>Beginner A1–A2</option>
+          <option value="intermediate">Intermediate A2–B1</option>
+          <option value="advanced">Advanced B1–C1</option>
         </select>
         <p class="form-msg" id="signupMsg" role="alert"></p>
         <button type="submit" class="btn btn-primary btn-block">Create My Account</button>

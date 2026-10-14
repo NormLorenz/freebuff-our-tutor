@@ -163,9 +163,12 @@
     $("#tutorNavLink").hidden = !currentUser;
     $("#tutor").hidden = !currentUser; // My Tutor section appears when signed in
     if (currentUser) {
-      $("#signinMsg").textContent = "Angemeldet als " + currentUser.name + " (" + currentUser.plan + ").";
+      const tier = DB && currentUser.plan ? DB.PLANS[currentUser.plan] : null;
+      $("#signinMsg").textContent = "Angemeldet als " + currentUser.name +
+        (tier ? " (" + tier.label + " " + tier.range + ")." : ".");
       $("#signinMsg").className = "form-msg ok";
       loadTutorHistory();
+      syncTutorLevelFromUser(); // start each tutor session at the user's level
     } else {
       tutorLoaded = false;
     }
@@ -219,9 +222,10 @@
       });
       currentUser = user;
       localStorage.setItem("dl-user", JSON.stringify(user));
+      const tier = DB.PLANS[user.plan];
       showSuccess(
         "Vollständig! 🎉",
-        "Welcome to GutenTag, " + user.name + "! Your " + user.plan + " package is reserved. Check the Visit section for trial times — and don't forget your AI tutor in the My Tutor section!"
+        "Welcome to GutenTag, " + user.name + "! Your " + tier.label + " (" + tier.range + ") plan is set and your tutor starts you at German level " + user.tutorLevel + " — change it any time in the My Tutor section. Check the Visit section for trial times!"
       );
       refreshAuthState();
     } catch (err) {
@@ -331,17 +335,26 @@
   levelSelect.addEventListener("change", async () => {
     const level = levelSelect.value;
     $("#tutorLevelLabel").textContent = level;
-    if (DB) DB.Settings.set("tutorLevel", level);
+    // The tutor level is a property of the signed-in user (users.tutorLevel).
+    if (DB && currentUser) {
+      const updated = await DB.Users.setLevel(currentUser.email, level);
+      if (updated) {
+        currentUser = updated; // keep the session record in sync
+        try { localStorage.setItem("dl-user", JSON.stringify(currentUser)); } catch (_) { /* ok */ }
+      }
+    }
   });
 
-  (async function restoreTutorLevel() {
-    if (!DB) return;
-    const level = await DB.Settings.get("tutorLevel");
-    if (level) {
-      levelSelect.value = level;
-      $("#tutorLevelLabel").textContent = level;
-    }
-  })();
+  /* Start (or restore) a tutor session at the user's current level — which
+     was seeded from their lesson plan at signup, and can drift up from there. */
+  async function syncTutorLevelFromUser() {
+    if (!DB || !currentUser) return;
+    const user = await DB.Users.findByEmail(currentUser.email);
+    const level = user?.tutorLevel ?? currentUser.tutorLevel; // DB wins over the cached session
+    if (!level) return;
+    levelSelect.value = level;
+    $("#tutorLevelLabel").textContent = level;
+  }
 
   tutorForm.addEventListener("submit", async (e) => {
     e.preventDefault();
