@@ -352,9 +352,9 @@
   async function refreshTopicChip(level) {
     if (!topicChip || !window.GutenTopics) return;
     const topic = await window.GutenTopics.random(level);
-    if (!topic || !topic.prompt) { topicChip.hidden = true; return; }
-    topicChip.textContent = "🎯 " + topic.title;
-    topicChip.dataset.quick = topic.prompt;
+    if (!topic || !topic.topic) { topicChip.hidden = true; return; }
+    topicChip.textContent = "🎯 " + topic.topic;
+    topicChip.dataset.quick = "Lass uns üben: " + topic.topic;
     topicChip.hidden = false;
   }
 

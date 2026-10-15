@@ -1,252 +1,216 @@
 {
   "title": "German Tutor",
   "level": "A2-B1",
-  "weeks": [
+  "topics": [
     {
-      "week": 1,
-      "title": "Building Confidence",
-      "topics": [
-        {
-          "id": 1,
-          "topic": "Describing experiences and personal milestones",
-          "completed": false
-        },
-        {
-          "id": 2,
-          "topic": "Talking about childhood and memories",
-          "completed": false
-        },
-        {
-          "id": 3,
-          "topic": "Explaining your opinions and preferences",
-          "completed": false
-        },
-        {
-          "id": 4,
-          "topic": "Describing people’s personalities and relationships",
-          "completed": false
-        },
-        {
-          "id": 5,
-          "topic": "Telling a story in the past tense",
-          "completed": false
-        },
-        {
-          "id": 6,
-          "topic": "Making plans and arranging to meet",
-          "completed": false
-        },
-        {
-          "id": 7,
-          "topic": "Review: everyday conversations with more detail",
-          "completed": false
-        }
-      ]
+      "id": 1,
+      "topic": "Describing experiences and personal milestones",
+      "completed": false
     },
     {
-      "week": 2,
-      "title": "Everyday Life in More Detail",
-      "topics": [
-        {
-          "id": 8,
-          "topic": "Describing your neighborhood and local services",
-          "completed": false
-        },
-        {
-          "id": 9,
-          "topic": "Comparing cities, homes, and lifestyles",
-          "completed": false
-        },
-        {
-          "id": 10,
-          "topic": "Discussing education and learning languages",
-          "completed": false
-        },
-        {
-          "id": 11,
-          "topic": "Talking about jobs, responsibilities, and experience",
-          "completed": false
-        },
-        {
-          "id": 12,
-          "topic": "Explaining household problems and asking for help",
-          "completed": false
-        },
-        {
-          "id": 13,
-          "topic": "Making appointments and changing plans",
-          "completed": false
-        },
-        {
-          "id": 14,
-          "topic": "Review: describing situations and giving reasons",
-          "completed": false
-        }
-      ]
+      "id": 2,
+      "topic": "Talking about childhood and memories",
+      "completed": false
     },
     {
-      "week": 3,
-      "title": "Communication & Problem Solving",
-      "topics": [
-        {
-          "id": 15,
-          "topic": "Giving advice and making suggestions",
-          "completed": false
-        },
-        {
-          "id": 16,
-          "topic": "Making polite requests and complaints",
-          "completed": false
-        },
-        {
-          "id": 17,
-          "topic": "Explaining a problem and asking for a solution",
-          "completed": false
-        },
-        {
-          "id": 18,
-          "topic": "Understanding announcements and public information",
-          "completed": false
-        },
-        {
-          "id": 19,
-          "topic": "Travel disruptions, delays, and alternative plans",
-          "completed": false
-        },
-        {
-          "id": 20,
-          "topic": "Discussing health problems and describing symptoms",
-          "completed": false
-        },
-        {
-          "id": 21,
-          "topic": "Review: role-play practical problems",
-          "completed": false
-        }
-      ]
+      "id": 3,
+      "topic": "Explaining your opinions and preferences",
+      "completed": false
     },
     {
-      "week": 4,
-      "title": "Opinions, Stories & Future Plans",
-      "topics": [
-        {
-          "id": 22,
-          "topic": "Giving opinions and supporting them with reasons",
-          "completed": false
-        },
-        {
-          "id": 23,
-          "topic": "Agreeing and disagreeing politely",
-          "completed": false
-        },
-        {
-          "id": 24,
-          "topic": "Talking about films, books, music, and news",
-          "completed": false
-        },
-        {
-          "id": 25,
-          "topic": "Describing a trip or memorable experience",
-          "completed": false
-        },
-        {
-          "id": 26,
-          "topic": "Talking about goals, hopes, and future intentions",
-          "completed": false
-        },
-        {
-          "id": 27,
-          "topic": "Explaining advantages and disadvantages",
-          "completed": false
-        },
-        {
-          "id": 28,
-          "topic": "Review: longer conversations and pronunciation",
-          "completed": false
-        }
-      ]
+      "id": 4,
+      "topic": "Describing people’s personalities and relationships",
+      "completed": false
     },
     {
-      "week": 5,
-      "title": "A2–B1 Grammar in Conversation",
-      "topics": [
-        {
-          "id": 29,
-          "topic": "Past experiences with Perfekt and Präteritum",
-          "completed": false
-        },
-        {
-          "id": 30,
-          "topic": "Sequencing events with zuerst, dann, danach, and schließlich",
-          "completed": false
-        },
-        {
-          "id": 31,
-          "topic": "Using weil, dass, and wenn in subordinate clauses",
-          "completed": false
-        },
-        {
-          "id": 32,
-          "topic": "Using modal verbs to express ability, obligation, and advice",
-          "completed": false
-        },
-        {
-          "id": 33,
-          "topic": "Comparative and superlative forms",
-          "completed": false
-        },
-        {
-          "id": 34,
-          "topic": "Two-way prepositions and location versus direction",
-          "completed": false
-        },
-        {
-          "id": 35,
-          "topic": "Review: grammar in spoken answers",
-          "completed": false
-        }
-      ]
+      "id": 5,
+      "topic": "Telling a story in the past tense",
+      "completed": false
     },
     {
-      "week": 6,
-      "title": "Fluency & Consolidation",
-      "topics": [
-        {
-          "id": 36,
-          "topic": "Describing pictures and situations",
-          "completed": false
-        },
-        {
-          "id": 37,
-          "topic": "Summarizing a short text or conversation",
-          "completed": false
-        },
-        {
-          "id": 38,
-          "topic": "Understanding the main points of clear everyday speech",
-          "completed": false
-        },
-        {
-          "id": 39,
-          "topic": "Writing a friendly email or message",
-          "completed": false
-        },
-        {
-          "id": 40,
-          "topic": "Handling an unexpected situation in conversation",
-          "completed": false
-        },
-        {
-          "id": 41,
-          "topic": "Speaking for two to three minutes on a familiar topic",
-          "completed": false
-        },
-        {
-          "id": 42,
-          "topic": "Final review: mixed A2–B1 conversation and pronunciation",
-          "completed": false
-        }
-      ]
+      "id": 6,
+      "topic": "Making plans and arranging to meet",
+      "completed": false
+    },
+    {
+      "id": 7,
+      "topic": "Review: everyday conversations with more detail",
+      "completed": false
+    },
+    {
+      "id": 8,
+      "topic": "Describing your neighborhood and local services",
+      "completed": false
+    },
+    {
+      "id": 9,
+      "topic": "Comparing cities, homes, and lifestyles",
+      "completed": false
+    },
+    {
+      "id": 10,
+      "topic": "Discussing education and learning languages",
+      "completed": false
+    },
+    {
+      "id": 11,
+      "topic": "Talking about jobs, responsibilities, and experience",
+      "completed": false
+    },
+    {
+      "id": 12,
+      "topic": "Explaining household problems and asking for help",
+      "completed": false
+    },
+    {
+      "id": 13,
+      "topic": "Making appointments and changing plans",
+      "completed": false
+    },
+    {
+      "id": 14,
+      "topic": "Review: describing situations and giving reasons",
+      "completed": false
+    },
+    {
+      "id": 15,
+      "topic": "Giving advice and making suggestions",
+      "completed": false
+    },
+    {
+      "id": 16,
+      "topic": "Making polite requests and complaints",
+      "completed": false
+    },
+    {
+      "id": 17,
+      "topic": "Explaining a problem and asking for a solution",
+      "completed": false
+    },
+    {
+      "id": 18,
+      "topic": "Understanding announcements and public information",
+      "completed": false
+    },
+    {
+      "id": 19,
+      "topic": "Travel disruptions, delays, and alternative plans",
+      "completed": false
+    },
+    {
+      "id": 20,
+      "topic": "Discussing health problems and describing symptoms",
+      "completed": false
+    },
+    {
+      "id": 21,
+      "topic": "Review: role-play practical problems",
+      "completed": false
+    },
+    {
+      "id": 22,
+      "topic": "Giving opinions and supporting them with reasons",
+      "completed": false
+    },
+    {
+      "id": 23,
+      "topic": "Agreeing and disagreeing politely",
+      "completed": false
+    },
+    {
+      "id": 24,
+      "topic": "Talking about films, books, music, and news",
+      "completed": false
+    },
+    {
+      "id": 25,
+      "topic": "Describing a trip or memorable experience",
+      "completed": false
+    },
+    {
+      "id": 26,
+      "topic": "Talking about goals, hopes, and future intentions",
+      "completed": false
+    },
+    {
+      "id": 27,
+      "topic": "Explaining advantages and disadvantages",
+      "completed": false
+    },
+    {
+      "id": 28,
+      "topic": "Review: longer conversations and pronunciation",
+      "completed": false
+    },
+    {
+      "id": 29,
+      "topic": "Past experiences with Perfekt and Präteritum",
+      "completed": false
+    },
+    {
+      "id": 30,
+      "topic": "Sequencing events with zuerst, dann, danach, and schließlich",
+      "completed": false
+    },
+    {
+      "id": 31,
+      "topic": "Using weil, dass, and wenn in subordinate clauses",
+      "completed": false
+    },
+    {
+      "id": 32,
+      "topic": "Using modal verbs to express ability, obligation, and advice",
+      "completed": false
+    },
+    {
+      "id": 33,
+      "topic": "Comparative and superlative forms",
+      "completed": false
+    },
+    {
+      "id": 34,
+      "topic": "Two-way prepositions and location versus direction",
+      "completed": false
+    },
+    {
+      "id": 35,
+      "topic": "Review: grammar in spoken answers",
+      "completed": false
+    },
+    {
+      "id": 36,
+      "topic": "Describing pictures and situations",
+      "completed": false
+    },
+    {
+      "id": 37,
+      "topic": "Summarizing a short text or conversation",
+      "completed": false
+    },
+    {
+      "id": 38,
+      "topic": "Understanding the main points of clear everyday speech",
+      "completed": false
+    },
+    {
+      "id": 39,
+      "topic": "Writing a friendly email or message",
+      "completed": false
+    },
+    {
+      "id": 40,
+      "topic": "Handling an unexpected situation in conversation",
+      "completed": false
+    },
+    {
+      "id": 41,
+      "topic": "Speaking for two to three minutes on a familiar topic",
+      "completed": false
+    },
+    {
+      "id": 42,
+      "topic": "Final review: mixed A2–B1 conversation and pronunciation",
+      "completed": false
     }
   ]
 }

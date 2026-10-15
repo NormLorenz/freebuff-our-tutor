@@ -127,12 +127,10 @@ Rules:
        (public/data/topics/<level>.json via window.GutenTopics). */
     try {
       const topic = window.GutenTopics ? await window.GutenTopics.random(level) : null;
-      if (topic && topic.prompt) {
+      if (topic && topic.topic) {
         return (
-          "Lass uns üben: " + topic.prompt + "\n(" + (topic.promptEn || topic.title) + ")" +
-          (topic.vocab && topic.vocab.length
-            ? "\n• Nützlich: " + topic.vocab.slice(0, 3).join(", ")
-            : "")
+          "Lass uns üben: " + topic.topic +
+          "\n(Let's practice: " + topic.topic + ")"
         );
       }
     } catch (_) { /* fall through to canned openers */ }

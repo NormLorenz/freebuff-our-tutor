@@ -1,59 +1,68 @@
 /**
- * topics.js — shared loader for the per-level topic JSON files.
+ * topics.js — shared loader for the per-range topic JSON files.
  *
- * Files live in ../data/topics/<level>.json (e.g. a1.json) relative to
- * this script, so both the page (main.js) and the tutor (tutor.js) get
- * the same data through window.GutenTopics:
+ * Files live in ../data/topics/<range>.json relative to this script,
+ * so both the page (main.js) and the tutor (tutor.js) get the same data
+ * through window.GutenTopics:
  *
- *   const pack  = await GutenTopics.load("A1");   // full pack, cached
- *   const topic = await GutenTopics.random("B1"); // one random topic
- *   const list  = await GutenTopics.list();       // levels with files
+ *   const pack  = await GutenTopics.load("A1-A2");   // full pack, cached
+ *   const topic = await GutenTopics.random("B1");    // one random topic
+ *   const list  = await GutenTopics.list();          // ranges with files
  *
- * Levels are case-insensitive ("a1", "A1", " a1 " all work). If a level
- * file is missing, load() falls back to the nearest available level so
- * callers never have to handle rejection.
+ * A single CEFR letter ("a1", "A1", " a1 " all work) is resolved onto the
+ * range file that covers that level (A1–A2, A2–B1, or B1–C1). Unknown
+ * levels fall back to the first available range, so callers never have to
+ * handle rejection.
  */
 (function () {
   "use strict";
 
-  const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
+  const LEVELS = ["A1-A2", "A2-B1", "B1-C1"];
+  /* CEFR letter → range file that includes that level; boundary letters
+     resolve to the range named after them (A2 → A2-B1, B1 → B1-C1). */
+  const LETTER_TO_RANGE = {
+    A1: "A1-A2",
+    A2: "A2-B1",
+    B1: "B1-C1",
+    B2: "B1-C1",
+    C1: "B1-C1",
+  };
   const BASE = new URL("../data/topics/", document.currentScript.src);
   const BASE_URL = BASE.href;
 
-  const cache = {}; // lowercased level -> resolved pack | null (failed)
+  const cache = {}; // range -> resolved pack | null (failed)
 
   function normalize(level) {
     return String(level || "").trim().toUpperCase();
   }
 
-  /** Nearest lower level that still has a file, else the lowest level. */
-  function fallbackFor(level) {
-    const idx = LEVELS.indexOf(level);
-    return idx > 0 ? LEVELS[idx - 1] : LEVELS[0];
+  /** Resolve any level key (letter or range) onto an existing range file. */
+  function resolve(level) {
+    const key = normalize(level);
+    if (LEVELS.includes(key)) return key;
+    return LETTER_TO_RANGE[key] || LEVELS[0];
   }
 
-  async function loadRaw(level) {
-    const key = normalize(level);
-    if (key in cache) return cache[key];
+  async function loadRaw(range) {
+    if (range in cache) return cache[range];
     try {
-      const res = await fetch(BASE_URL + key.toLowerCase() + ".json");
-      if (!res.ok) throw new Error(res.status + " for " + key);
+      const res = await fetch(BASE_URL + range.toLowerCase() + ".json");
+      if (!res.ok) throw new Error(res.status + " for " + range);
       const pack = await res.json();
       if (!pack || !Array.isArray(pack.topics)) throw new Error("malformed pack");
-      cache[key] = pack;
+      cache[range] = pack;
       return pack;
     } catch (err) {
-      console.warn("[topics] no pack for " + key + " (" + err.message + ")");
-      cache[key] = null; // remember the miss so we don't refetch
+      console.warn("[topics] no pack for " + range + " (" + err.message + ")");
+      cache[range] = null; // remember the miss so we don't refetch
       return null;
     }
   }
 
   async function load(level) {
-    const key = normalize(level);
-    let pack = await loadRaw(key);
-    if (!pack) pack = await loadRaw(fallbackFor(key));
-    return pack || { level: key, title: key, description: "", topics: [] };
+    const range = resolve(level);
+    const pack = await loadRaw(range);
+    return pack || { level: range, title: range, description: "", topics: [] };
   }
 
   async function random(level, excludeId) {
@@ -69,8 +78,8 @@
   async function list() {
     // Cheap existence probe: the dev server answers 200 with JSON, a miss is 404.
     const out = [];
-    for (const lvl of LEVELS) {
-      if (await loadRaw(lvl)) out.push(lvl);
+    for (const range of LEVELS) {
+      if (await loadRaw(range)) out.push(range);
     }
     return out;
   }
