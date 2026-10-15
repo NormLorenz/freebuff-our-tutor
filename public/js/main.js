@@ -115,10 +115,13 @@
   const tutorForm = $("#tutorForm");
   const tutorInput = $("#tutorInput");
   const topicChip = $(".chip-topic");
+  const topicSelect = $("#tutorTopicSelect");
   let tutorLevel = "A1"; // always taken from the user's record (plan-seeded)
   let tutorBusy = false;
   let tutorMessages = [];
   let tutorLoaded = false;
+  let userTopics = []; // the user's own topic pack (copied at signup)
+  let currentTopicId = null; // topic whose history is open (null = general chat)
 
   /* ================================================================
      Auth modal (signup / signin)
@@ -172,6 +175,10 @@
       syncTutorLevelFromUser(); // start each tutor session at the user's level
     } else {
       tutorLoaded = false;
+      userTopics = [];
+      currentTopicId = null;
+      topicSelect.innerHTML = '<option value="">— Wähle ein Thema (choose a topic) —</option>';
+      topicChip.hidden = true;
     }
   }
 
@@ -223,6 +230,9 @@
       });
       currentUser = user;
       localStorage.setItem("dl-user", JSON.stringify(user));
+      // Copy the plan's topic pack onto the new user profile right away so
+      // My Tutor immediately offers selectable topics.
+      if (DB.UserTopics) await DB.UserTopics.ensure(user.email);
       const tier = DB.PLANS[user.plan];
       showSuccess(
         "Vollständig! 🎉",
@@ -320,17 +330,15 @@
   });
 
   /* ================================================================
-     Tutor section (My Tutor) — via api/tutor.js + DB persistence
+     Tutor section (My Tutor) — via api/tutor.js; per-topic history lives
+     on the user profile (DB.UserTopics), the no-topic chat is session-only
      ================================================================ */
-  async function loadTutorHistory() {
-    if (!DB || tutorLoaded) return;
+  function loadTutorHistory() {
+    if (tutorLoaded) return;
     tutorLoaded = true;
-    tutorMessages = await DB.TutorSessions.load("tutor");
+    tutorMessages = []; // fresh start — there is no general tutor table anymore
     tutorLog.innerHTML = "";
-    tutorMessages.forEach((m) => addBubble(tutorLog, m.text, m.role));
-    if (!tutorMessages.length) {
-      addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
-    }
+    addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
   }
 
   /* Start (or restore) a tutor session at the user's current level — which
@@ -343,19 +351,75 @@
     if (!level) return;
     tutorLevel = level;
     $("#tutorLevelLabel").textContent = level;
-    refreshTopicChip(level);
+    await loadUserTopics();
   }
 
-  /* Fill the practice-topic chip from public/data/topics/<level>.json
-     via window.GutenTopics (same data source api/tutor.js uses). The chip
-     reuses the shared .chip handler: it sets data-quick and submits. */
-  async function refreshTopicChip(level) {
-    if (!topicChip || !window.GutenTopics) return;
-    const topic = await window.GutenTopics.random(level);
-    if (!topic || !topic.topic) { topicChip.hidden = true; return; }
-    topicChip.textContent = "🎯 " + topic.topic;
-    topicChip.dataset.quick = "Lass uns üben: " + topic.topic;
+  /* Topics come from the copy of the plan's range pack stored on the user
+     profile (see api/db.js → UserTopics). The select lists them with ✓ for      visited ones; the chip starts practicing the selected topic and the
+     tutor messages for that topic are kept in its history. */
+  function findTopic(id) {
+    return userTopics.find((t) => Number(t.id) === Number(id)) || null;
+  }
+
+  function renderTopicSelect() {
+    topicSelect.innerHTML = "";
+    topicSelect.append(new Option("— Wähle ein Thema (choose a topic) —", ""));
+    for (const t of userTopics) {
+      const opt = new Option((t.visited ? "✓ " : "") + t.topic, String(t.id));
+      opt.selected = Number(t.id) === Number(currentTopicId);
+      topicSelect.append(opt);
+    }
+  }
+
+  /* Keep the practice chip and dropdown label in sync with the selected
+     topic (the chip reuses the shared .chip handler: data-quick submits). */
+  function syncTopicChip() {
+    const t = findTopic(currentTopicId);
+    if (!t) { topicChip.hidden = true; return; }
+    topicChip.textContent = "🎯 " + t.topic;
+    topicChip.dataset.quick = "Lass uns üben: " + t.topic;
     topicChip.hidden = false;
+  }
+
+  /* View-only starter bubble for a freshly chosen topic (not persisted). */
+  function addTopicStarter(t) {
+    addBubble(tutorLog, "🎯 " + t.topic + " — schreib deinen ersten Satz auf Deutsch, ich helfe dir! (write your first sentence in German, I'll help!)", "bot");
+  }
+
+  function markSelectComplete(id) {
+    const opt = topicSelect.querySelector('option[value="' + id + '"]');
+    if (opt && !opt.text.startsWith("✓ ")) opt.text = "✓ " + opt.text;
+  }
+
+  /* Render the conversation for the current selection: the selected topic's
+     history, a fresh starter bubble when it's empty, or the general chat. */
+  async function showTopicView() {
+    const t = findTopic(currentTopicId);
+    tutorLog.innerHTML = "";
+    if (t) {
+      (t.history || []).forEach((m) => addBubble(tutorLog, m.text, m.role));
+      if (!t.history || !t.history.length) addTopicStarter(t);
+    } else if (!tutorLoaded) {
+      await loadTutorHistory(); // loads + renders the general session
+    } else {
+      tutorMessages.forEach((m) => addBubble(tutorLog, m.text, m.role));
+      if (!tutorMessages.length) {
+        addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
+      }
+    }
+  }
+
+  /* Load the user's own topic list (seeds legacy profiles on the way) and
+     open the first incomplete topic by default. */
+  async function loadUserTopics() {
+    if (!DB || !currentUser) return;
+    userTopics = (await DB.UserTopics.ensure(currentUser.email)) || [];
+    if (!currentTopicId) {
+      const next = userTopics.find((t) => !t.visited) || userTopics[0] || null;
+      if (next) currentTopicId = next.id;
+    }
+    renderTopicSelect();
+    await showTopicView();
   }
 
   tutorForm.addEventListener("submit", async (e) => {
@@ -366,17 +430,34 @@
     tutorInput.value = "";
 
     addBubble(tutorLog, q, "user");
-    tutorMessages.push({ role: "user", text: q });
+    const activeTopic = findTopic(currentTopicId);
+    const prior = activeTopic ? (activeTopic.history || []) : tutorMessages;
     const typing = addTypingIndicator(tutorLog);
 
-    const history = tutorMessages.map((m) => ({ role: m.role, content: m.text }));
+    const history = prior
+      .map((m) => ({ role: m.role, content: m.text }));
 
-    const answer = await Tutor.reply(q, tutorLevel, history.slice(0, -1));
+    const answer = await Tutor.reply(q, tutorLevel, history);
     typing.remove();
     addBubble(tutorLog, answer.text, "bot");
-    tutorMessages.push({ role: "assistant", text: answer.text });
-    tutorMessages = tutorMessages.slice(-40);
-    if (DB) DB.TutorSessions.save("tutor", tutorMessages);
+    const turn = [
+      { role: "user", text: q },
+      { role: "assistant", text: answer.text },
+    ];
+    if (activeTopic && DB) {
+      /* Persist onto the topic itself: history stays with the topic and the
+         topic counts as practiced. */
+      const updated = await DB.UserTopics.saveTurn(currentUser.email, activeTopic.id, turn);
+      if (updated) {
+        activeTopic.history = updated.history || [];
+        activeTopic.visited = true;
+      }
+      markSelectComplete(activeTopic.id);
+    } else {
+      tutorMessages.push({ role: "user", text: q });
+      tutorMessages.push({ role: "assistant", text: answer.text });
+      tutorMessages = tutorMessages.slice(-40);
+    }
     tutorBusy = false;
     tutorInput.focus();
   });
@@ -390,12 +471,26 @@
     })
   );
 
-  /* Clear tutor history */
+  /* Clear history: per-topic when a topic is selected, else the general chat */
   $("#tutorClear").addEventListener("click", async () => {
+    const activeTopic = findTopic(currentTopicId);
     tutorLog.innerHTML = "";
-    tutorMessages = [];
-    addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
-    if (DB) await DB.TutorSessions.clear("tutor");
+    if (activeTopic && DB && currentUser) {
+      const updated = await DB.UserTopics.clearHistory(currentUser.email, activeTopic.id);
+      activeTopic.history = updated?.history ?? [];
+      activeTopic.visited = updated ? updated.visited : activeTopic.visited; // clears to false
+      renderTopicSelect(); // drop the ✓ from the option
+      addTopicStarter(activeTopic);
+    } else {
+      tutorMessages = [];
+      addBubble(tutorLog, "Guten Tag! 🇩🇪 Ich bin Herr Grün, dein Deutschlehrer. Wie geht es dir heute?", "bot");
+    }
     tutorInput.focus();
+  });
+
+  /* Switching topics opens that topic's (saved) conversation */
+  topicSelect.addEventListener("change", async () => {
+    currentTopicId = topicSelect.value ? Number(topicSelect.value) : null;
+    await showTopicView();
   });
 })();

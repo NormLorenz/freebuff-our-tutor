@@ -4,11 +4,17 @@
  *
  * Tables:
  *   users        — signed-up students { email, name, passwordHash, plan,
- *                  tutorLevel, createdAt }; plan: beginner/intermediate/advanced
+ *                  tutorLevel, topics[], createdAt }; plan:
+ *                  beginner/intermediate/advanced. `topics` is a copy of the
+ *                  plan's range pack made on creation: each entry is
+ *                  { id, topic, visited, history[] } and history keeps the
+ *                  tutor messages practiced on that topic.
  *   subscribers  — monthly newsletter signups { email, subscribedAt }
  *   chatSessions — service-bot conversations { key, messages[], updatedAt }
- *   tutorSessions— German tutor conversations { key, messages[], updatedAt }
  *   settings     — app preferences { key, value } (e.g. theme)
+ *
+ *   (tutorSessions was removed in v4 — topic conversations live on the
+ *   user's topic list now, and the no-topic chat is session-scoped.)
  *
  * Exposed globally as window.GutenDB (plain script, no imports needed).
  */
@@ -82,13 +88,21 @@ if (db) {
         }
       });
     });
+  /* v4 — drop the tutorSessions table entirely: tutor practice is per
+   * topic on the user profile (UserTopics), and the topicless chat is
+   * intentionally session-only. Setting the schema to null deletes the
+   * table (and its data) in Dexie. */
+  db.version(4)
+    .stores({
+      tutorSessions: null,
+    });
 }
 
 /* ------------------------------------------------------------------ */
 /* In-memory fallback (when IndexedDB/Dexie is unavailable)            */
 /* ------------------------------------------------------------------ */
 function makeMemoryStore() {
-  const tables = { users: [], subscribers: [], chatSessions: [], tutorSessions: [], settings: [] };
+  const tables = { users: [], subscribers: [], chatSessions: [], settings: [] };
   let seq = 1;
   const norm = (table) => (tables[table] ??= []);
   return {
@@ -194,6 +208,80 @@ const Users = {
 };
 
 /* ------------------------------------------------------------------ */
+/* User topics — the plan's range topic pack (public/data/topics/*.json)
+/* copied onto the user profile when the account is created, so every
+/* user has their own topics with a visited flag and a message history.
+/* ------------------------------------------------------------------ */
+const UserTopics = {
+  /* Copy the plan's range pack onto the user profile if it is not there
+   * yet. Runs implicitly at signup and also seeds legacy accounts the
+   * first time they open My Tutor. */
+  async ensure(email) {
+    const user = await Users.findByEmail(email);
+    if (!user) return null;
+    if (Array.isArray(user.topics) && user.topics.length) return user.topics;
+    if (!window.GutenTopics) return null; // topics.js not loaded
+    const level = (PLANS[user.plan] || PLANS.beginner).startLevel;
+    const pack = await window.GutenTopics.load(level);
+    const topics = (pack.topics || []).map((t) => ({
+      id: t.id,
+      topic: t.topic,
+      visited: false,
+      history: [],
+    }));
+    if (!topics.length) return null;
+    await store.put("users", { ...user, topics });
+    return topics;
+  },
+
+  /* The user's own topic list (each entry keeps its message history). */
+  async list(email) {
+    const user = await Users.findByEmail(email);
+    if (!user) return null;
+    return (await UserTopics.ensure(email)) || user.topics || [];
+  },
+
+  /* Append a practiced turn [{ role, text }, …] to a topic's history and    * mark the topic visited (you practiced it). History is capped at 40 */
+  async saveTurn(email, topicId, entries) {
+    const user = await Users.findByEmail(email);
+    if (!user) return null;
+    const topics = (Array.isArray(user.topics) ? user.topics : []).map((t) => {
+      if (Number(t.id) !== Number(topicId)) return t;
+      return {
+        ...t,
+        history: (t.history || []).concat(entries).slice(-40),
+        visited: true,
+      };
+    });
+    await store.put("users", { ...user, topics });
+    return topics.find((t) => Number(t.id) === Number(topicId)) || null;
+  },
+
+  /* Wipe one topic's message history and reset its visited flag, so the
+   * topic counts as fresh again (e.g. when the Clear button is pressed). */
+  async clearHistory(email, topicId) {
+    const user = await Users.findByEmail(email);
+    if (!user) return null;
+    const topics = (Array.isArray(user.topics) ? user.topics : []).map((t) =>
+      Number(t.id) === Number(topicId) ? { ...t, history: [], visited: false } : t
+    );
+    await store.put("users", { ...user, topics });
+    return topics.find((t) => Number(t.id) === Number(topicId)) || null;
+  },
+
+  /* Mark a topic done (or not) on the user profile. */
+  async setVisited(email, topicId, visited = true) {
+    const user = await Users.findByEmail(email);
+    if (!user) return null;
+    const topics = (Array.isArray(user.topics) ? user.topics : []).map((t) =>
+      Number(t.id) === Number(topicId) ? { ...t, visited } : t
+    );
+    await store.put("users", { ...user, topics });
+    return topics.find((t) => Number(t.id) === Number(topicId)) || null;
+  },
+};
+
+/* ------------------------------------------------------------------ */
 /* Newsletter subscribers                                              */
 /* ------------------------------------------------------------------ */
 const Subscribers = {
@@ -219,7 +307,7 @@ const Subscribers = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Chat sessions (service bot + tutor), keyed by conversation key       */
+/* Chat sessions (service bot), keyed by conversation key              */
 /* ------------------------------------------------------------------ */
 function sessionApi(table) {
   return {
@@ -241,7 +329,6 @@ function sessionApi(table) {
 }
 
 const ChatSessions = sessionApi("chatSessions");
-const TutorSessions = sessionApi("tutorSessions");
 
 /* ------------------------------------------------------------------ */
 /* Settings — app preferences (theme). Key/value rows in the settings  */
@@ -265,9 +352,9 @@ const Settings = {
 /* ------------------------------------------------------------------ */
 const GutenDB = {
   Users,
+  UserTopics,
   Subscribers,
   ChatSessions,
-  TutorSessions,
   Settings,
   PLANS,
   isReady: () => !!DexieLib,

@@ -247,6 +247,13 @@
           <h3>AI German Tutor</h3>
         </div>
         <p class="tutor-hint" id="tutorHint">Write in German (or English) and your tutor will answer in German level <strong id="tutorLevelLabel">A1</strong> — the level your lesson plan sets — with gentle corrections and English notes.</p>
+        <div class="tutor-topicrow">
+          <label class="visually-hidden" for="tutorTopicSelect">Choose a practice topic</label>
+          <select id="tutorTopicSelect" class="tutor-topic-select" aria-label="Choose a practice topic">
+            <option value="">— Wähle ein Thema (choose a topic) —</option>
+          </select>
+          <p class="tutor-topic-hint">Topics come from your plan's lesson pack; each one keeps its own chat history.</p>
+        </div>
         <div class="chat-log" id="tutorLog" aria-live="polite"></div>
         <div class="tutor-quickrow">
           <button class="chip" data-quick="Hallo! Wie geht es dir?">Hallo! Wie geht&apos;s?</button>

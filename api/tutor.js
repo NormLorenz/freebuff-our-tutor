@@ -3,7 +3,8 @@
  *
  * Uses the ChatGPT API to act as a friendly German tutor: it replies at the
  * student's CEFR level (A1–C1), gently corrects mistakes, and gives short
- * English notes when helpful. Conversation is persisted via GutenDB.
+ * English notes when helpful. Topic conversations are persisted by main.js
+ * on the user's own topic list (GutenDB.UserTopics).
  *
  * Configure the model key the same way as chat.js (localStorage
  * "openaiApiKey" or window.OPENAI_API_KEY). Without a key, a built-in
