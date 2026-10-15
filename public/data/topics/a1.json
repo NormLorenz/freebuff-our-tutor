@@ -1,0 +1,35 @@
+{
+  "level": "A1",
+  "title": "Beginner (A1)",
+  "description": "First words and everyday phrases — greetings, ordering, and simple small talk.",
+  "topics": [
+    {
+      "id": "greetings",
+      "title": "Hallo & Tschüss",
+      "prompt": "Begrüße mich und frage, wie es mir geht.",
+      "promptEn": "Greet me and ask how I'm doing.",
+      "vocab": ["Hallo", "Guten Tag", "Wie geht es dir?", "Tschüss"]
+    },
+    {
+      "id": "cafe",
+      "title": "Im Café",
+      "prompt": "Bestelle einen Kaffee und ein Stück Kuchen.",
+      "promptEn": "Order a coffee and a piece of cake.",
+      "vocab": ["der Kaffee", "das Brötchen", "Ich möchte …", "Bitte", "Danke"]
+    },
+    {
+      "id": "introduce",
+      "title": "Sich vorstellen",
+      "prompt": "Stelle dich vor: Name, Herkunft und Hobby.",
+      "promptEn": "Introduce yourself: name, where you're from, and a hobby.",
+      "vocab": ["Ich heiße …", "Ich komme aus …", "Mein Hobby ist …"]
+    },
+    {
+      "id": "shopping",
+      "title": "Einkaufen",
+      "prompt": "Frage nach dem Preis von zwei Lebensmitteln im Laden.",
+      "promptEn": "Ask the price of two food items in a shop.",
+      "vocab": ["Was kostet …?", "das Brot", "die Milch", "zahlen"]
+    }
+  ]
+}

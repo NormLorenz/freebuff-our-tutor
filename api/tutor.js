@@ -121,8 +121,21 @@ Rules:
     "Danke! Und nun: Was möchtest du in Deutschland zuerst erleben? (What would you like to experience first in Germany?)",
   ];
 
-  function offlineReply(msg, turn) {
+  async function offlineReply(msg, turn, level) {
     for (const r of OFFLINE_REPLIES) if (r.test.test(msg)) return r.reply();
+    /* No canned match: pull an opener from the level's topic pack
+       (public/data/topics/<level>.json via window.GutenTopics). */
+    try {
+      const topic = window.GutenTopics ? await window.GutenTopics.random(level) : null;
+      if (topic && topic.prompt) {
+        return (
+          "Lass uns üben: " + topic.prompt + "\n(" + (topic.promptEn || topic.title) + ")" +
+          (topic.vocab && topic.vocab.length
+            ? "\n• Nützlich: " + topic.vocab.slice(0, 3).join(", ")
+            : "")
+        );
+      }
+    } catch (_) { /* fall through to canned openers */ }
     return OPENERS[turn % OPENERS.length];
   }
 
@@ -132,10 +145,10 @@ Rules:
     try {
       const ai = await askChatGPT(userMessage, level, history);
       if (ai) return { text: ai, source: "chatgpt" };
-      return { text: offlineReply(userMessage, history.length), source: "practice" };
+      return { text: await offlineReply(userMessage, history.length, level), source: "practice" };
     } catch (err) {
       console.warn("[tutor] ChatGPT unavailable (" + err.message + ") — using practice mode.");
-      return { text: offlineReply(userMessage, history.length), source: "practice" };
+      return { text: await offlineReply(userMessage, history.length, level), source: "practice" };
     }
   }
 

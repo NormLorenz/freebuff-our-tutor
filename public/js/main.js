@@ -114,6 +114,7 @@
   const tutorLog = $("#tutorLog");
   const tutorForm = $("#tutorForm");
   const tutorInput = $("#tutorInput");
+  const topicChip = $(".chip-topic");
   let tutorLevel = "A1"; // always taken from the user's record (plan-seeded)
   let tutorBusy = false;
   let tutorMessages = [];
@@ -342,6 +343,19 @@
     if (!level) return;
     tutorLevel = level;
     $("#tutorLevelLabel").textContent = level;
+    refreshTopicChip(level);
+  }
+
+  /* Fill the practice-topic chip from public/data/topics/<level>.json
+     via window.GutenTopics (same data source api/tutor.js uses). The chip
+     reuses the shared .chip handler: it sets data-quick and submits. */
+  async function refreshTopicChip(level) {
+    if (!topicChip || !window.GutenTopics) return;
+    const topic = await window.GutenTopics.random(level);
+    if (!topic || !topic.prompt) { topicChip.hidden = true; return; }
+    topicChip.textContent = "🎯 " + topic.title;
+    topicChip.dataset.quick = topic.prompt;
+    topicChip.hidden = false;
   }
 
   tutorForm.addEventListener("submit", async (e) => {

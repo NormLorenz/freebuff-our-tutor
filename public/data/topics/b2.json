@@ -1,0 +1,35 @@
+{
+  "level": "B2",
+  "title": "Upper Intermediate (B2)",
+  "description": "Discussions, debates, and expressing nuance on bigger themes.",
+  "topics": [
+    {
+      "id": "debate",
+      "title": "Diskussion",
+      "prompt": "Nimm Stellung: Ist Homeoffice besser als das Büro? Verteidige deine Position.",
+      "promptEn": "Take a stance: is working from home better than the office? Defend your position.",
+      "vocab": ["einerseits … andererseits", "die Vor-/Nachteile", "innovativ", "setzen (sich einsetzen für)"]
+    },
+    {
+      "id": "gesellschaft",
+      "title": "Gesellschaft",
+      "prompt": "Diskutiere mit mir: Wie wichtig ist Umweltschutz im Alltag?",
+      "promptEn": "Discuss with me: how important is environmental protection in daily life?",
+      "vocab": ["die Umwelt", "nachhaltig", "verantwortlich", "der Konsum"]
+    },
+    {
+      "id": "nachrichten",
+      "title": "Nachrichten",
+      "prompt": "Fasse eine Nachricht zusammen und gib deine Einschätzung dazu.",
+      "promptEn": "Summarise a news item and give your take on it.",
+      "vocab": ["berichten", "die Schlagzeile", "es geht um", "laut Umfragen"]
+    },
+    {
+      "id": "idiome",
+      "title": "Redewendungen",
+      "prompt": "Erzähl mir eine kurze Geschichte und baue drei deutsche Redewendungen ein.",
+      "promptEn": "Tell me a short story using three German idioms.",
+      "vocab": ["Tomaten auf den Augen haben", "Schwein gehabt", "ins Fettnäpfchen treten"]
+    }
+  ]
+}

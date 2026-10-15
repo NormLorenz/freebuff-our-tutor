@@ -1,0 +1,180 @@
+{
+  "title": "German Tutor",
+  "level": "A1-A2",
+  "weeks": [
+    {
+      "week": 1,
+      "title": "Everyday Basics",
+      "topics": [
+        {
+          "id": 1,
+          "topic": "Introducing yourself",
+          "completed": false
+        },
+        {
+          "id": 2,
+          "topic": "Talking about your family",
+          "completed": false
+        },
+        {
+          "id": 3,
+          "topic": "Describing your home",
+          "completed": false
+        },
+        {
+          "id": 4,
+          "topic": "Daily routines",
+          "completed": false
+        },
+        {
+          "id": 5,
+          "topic": "Food & drinks",
+          "completed": false
+        },
+        {
+          "id": 6,
+          "topic": "Ordering at a café",
+          "completed": false
+        },
+        {
+          "id": 7,
+          "topic": "Grocery shopping",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "title": "Life & Activities",
+      "topics": [
+        {
+          "id": 8,
+          "topic": "Hobbies",
+          "completed": false
+        },
+        {
+          "id": 9,
+          "topic": "Weather & seasons",
+          "completed": false
+        },
+        {
+          "id": 10,
+          "topic": "Clothing",
+          "completed": false
+        },
+        {
+          "id": 11,
+          "topic": "Time & schedules",
+          "completed": false
+        },
+        {
+          "id": 12,
+          "topic": "Asking for directions",
+          "completed": false
+        },
+        {
+          "id": 13,
+          "topic": "Transportation",
+          "completed": false
+        },
+        {
+          "id": 14,
+          "topic": "At the train station",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "title": "Practical Situations",
+      "topics": [
+        {
+          "id": 15,
+          "topic": "At a restaurant",
+          "completed": false
+        },
+        {
+          "id": 16,
+          "topic": "At the doctor",
+          "completed": false
+        },
+        {
+          "id": 17,
+          "topic": "At the pharmacy",
+          "completed": false
+        },
+        {
+          "id": 18,
+          "topic": "Buying household items",
+          "completed": false
+        },
+        {
+          "id": 19,
+          "topic": "Talking about work",
+          "completed": false
+        },
+        {
+          "id": 20,
+          "topic": "Talking about your weekend plans",
+          "completed": false
+        },
+        {
+          "id": 21,
+          "topic": "Talking about past events (simple past with war / hatte)",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "title": "Real Conversations",
+      "topics": [
+        {
+          "id": 22,
+          "topic": "Renting an apartment",
+          "completed": false
+        },
+        {
+          "id": 23,
+          "topic": "Visiting a friend",
+          "completed": false
+        },
+        {
+          "id": 24,
+          "topic": "Planning a trip",
+          "completed": false
+        },
+        {
+          "id": 25,
+          "topic": "At a hotel",
+          "completed": false
+        },
+        {
+          "id": 26,
+          "topic": "Shopping for clothes",
+          "completed": false
+        },
+        {
+          "id": 27,
+          "topic": "Talking about health & fitness",
+          "completed": false
+        },
+        {
+          "id": 28,
+          "topic": "Talking about your city",
+          "completed": false
+        },
+        {
+          "id": 29,
+          "topic": "Talking about future plans (using werden)",
+          "completed": false
+        },
+        {
+          "id": 30,
+          "topic": "Review day — mix topics + pronunciation focus",
+          "completed": false
+        }
+      ]
+    }
+  ]
+}

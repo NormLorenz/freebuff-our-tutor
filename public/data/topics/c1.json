@@ -1,0 +1,35 @@
+{
+  "level": "C1",
+  "title": "Advanced (C1)",
+  "description": "Fluent, precise German: argumentation, register, and style.",
+  "topics": [
+    {
+      "id": "styl",
+      "title": "Stil & Register",
+      "prompt": "Formuliere denselben Gedanken einmal formell (Bankgeschäft) und einmal salopp (unter Freunden).",
+      "promptEn": "Phrase the same idea once formally and once colloquially.",
+      "vocab": ["zwecks", "dahingehend", "krass", "eh"]
+    },
+    {
+      "id": "diskurs",
+      "title": "Diskurs",
+      "prompt": "Analysiere, wie Digitalisierung die Arbeitswelt verändert — mit Gegenargumenten.",
+      "promptEn": "Analyse how digitalisation is changing the world of work — include counterarguments.",
+      "vocab": ["in Anbetracht", "die Implikation", "daher", "gleichwohl"]
+    },
+    {
+      "id": "literatur",
+      "title": "Literatur",
+      "prompt": "Erörtere ein aktuelles Buch oder einen Film: Inhalt, Wirkung, Kritik.",
+      "promptEn": "Discuss a recent book or film: content, effect, critique.",
+      "vocab": ["die Erzählweise", "hinsichtlich", "Spiegel der Gesellschaft", "anspruchsvoll"]
+    },
+    {
+      "id": "nuancen",
+      "title": "Nuancen",
+      "prompt": "Erkläre den Bedeutungsunterschied zwischen zwei ähnlichen Wörtern deiner Wahl.",
+      "promptEn": "Explain the difference in meaning between two similar words of your choice.",
+      "vocab": ["die Nuance", "bedeutsam", "sachlich", "tatsächlich"]
+    }
+  ]
+}
