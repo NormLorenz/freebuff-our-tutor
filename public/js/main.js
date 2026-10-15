@@ -437,7 +437,7 @@
     const history = prior
       .map((m) => ({ role: m.role, content: m.text }));
 
-    const answer = await Tutor.reply(q, tutorLevel, history);
+    const answer = await Tutor.reply(q, tutorLevel, history, activeTopic ? activeTopic.topic : null);
     typing.remove();
     addBubble(tutorLog, answer.text, "bot");
     const turn = [

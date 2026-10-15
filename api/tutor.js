@@ -18,10 +18,15 @@
   const MODEL = window.OPENAI_MODEL || "gpt-4o-mini";
   const API_URL = "https://api.openai.com/v1/chat/completions";
 
-  function systemPrompt(level) {
+  function systemPrompt(level, topic) {
+    /* When a practice topic is selected, steer the roleplay toward it. */
+    const topicLine = topic
+      ? `\n\nThe current practice topic is "${topic}". Steer the conversation
+and vocabulary toward that topic (gently — it is a prompt, not a script).`
+      : "";
     return `
 You are "Herr Grün", a warm, patient, encouraging German tutor at GutenTag,
-a friendly German school in Berlin. The student's CEFR level is ${level}.
+a friendly German school in Berlin. The student's CEFR level is ${level}.${topicLine}
 
 Rules:
 - Reply primarily in simple ${level}-level German, correct and natural.
@@ -48,7 +53,7 @@ Rules:
     }
   }
 
-  async function askChatGPT(userMessage, level, history = []) {
+  async function askChatGPT(userMessage, level, history = [], topic = null) {
     const key = getApiKey();
     if (!key) return null;
 
@@ -58,7 +63,7 @@ Rules:
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: "system", content: systemPrompt(level) },
+          { role: "system", content: systemPrompt(level, topic) },
           ...history.slice(-10),
           { role: "user", content: userMessage },
         ],
@@ -122,8 +127,15 @@ Rules:
     "Danke! Und nun: Was möchtest du in Deutschland zuerst erleben? (What would you like to experience first in Germany?)",
   ];
 
-  async function offlineReply(msg, turn, level) {
+  async function offlineReply(msg, turn, level, topic = null) {
     for (const r of OFFLINE_REPLIES) if (r.test.test(msg)) return r.reply();
+    /* Selected topic: build the practice prompt directly around it. */
+    if (topic) {
+      return (
+        "Lass uns üben: " + topic +
+        "\n(Let's practice: " + topic + ")"
+      );
+    }
     /* No canned match: pull an opener from the level's topic pack
        (public/data/topics/<level>.json via window.GutenTopics). */
     try {
@@ -140,14 +152,14 @@ Rules:
 
   /* ---------------- Public API ---------------- */
 
-  async function reply(userMessage, level = "A1", history = []) {
+  async function reply(userMessage, level = "A1", history = [], topic = null) {
     try {
-      const ai = await askChatGPT(userMessage, level, history);
+      const ai = await askChatGPT(userMessage, level, history, topic);
       if (ai) return { text: ai, source: "chatgpt" };
-      return { text: await offlineReply(userMessage, history.length, level), source: "practice" };
+      return { text: await offlineReply(userMessage, history.length, level, topic), source: "practice" };
     } catch (err) {
       console.warn("[tutor] ChatGPT unavailable (" + err.message + ") — using practice mode.");
-      return { text: await offlineReply(userMessage, history.length, level), source: "practice" };
+      return { text: await offlineReply(userMessage, history.length, level, topic), source: "practice" };
     }
   }
 
