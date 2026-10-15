@@ -110,3 +110,4 @@ dev-server.js   static server with .env → HTML credential injection
 
 # To Do
 - should package.json should use dexie and openai package dependancies?
+- We need to figure how to map A1, A2, B1, B2 and C1 to the correct json file.
