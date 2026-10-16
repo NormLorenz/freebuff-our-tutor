@@ -114,7 +114,6 @@
   const tutorLog = $("#tutorLog");
   const tutorForm = $("#tutorForm");
   const tutorInput = $("#tutorInput");
-  const topicChip = $(".chip-topic");
   const topicSelect = $("#tutorTopicSelect");
   let tutorLevel = "A1"; // always taken from the user's record (plan-seeded)
   let tutorBusy = false;
@@ -178,7 +177,6 @@
       userTopics = [];
       currentTopicId = null;
       topicSelect.innerHTML = '<option value="">— Wähle ein Thema (choose a topic) —</option>';
-      topicChip.hidden = true;
     }
   }
 
@@ -350,7 +348,11 @@
     const level = user?.tutorLevel ?? currentUser.tutorLevel; // DB wins over the cached session
     if (!level) return;
     tutorLevel = level;
-    $("#tutorLevelLabel").textContent = level;
+    /* Display the level the way the user picked it: the plan tier's CEFR
+       range — A1–A2 (Beginner), A2–B1 (Intermediate), B1–C1 (Advanced) —
+       falling back to the raw stored level when no plan is known. */
+    const tier = DB.PLANS?.[user?.plan ?? currentUser.plan] ?? null;
+    $("#tutorLevelLabel").textContent = tier ? tier.range + " (" + tier.label + ")" : level;
     await loadUserTopics();
   }
 
@@ -369,16 +371,6 @@
       opt.selected = Number(t.id) === Number(currentTopicId);
       topicSelect.append(opt);
     }
-  }
-
-  /* Keep the practice chip and dropdown label in sync with the selected
-     topic (the chip reuses the shared .chip handler: data-quick submits). */
-  function syncTopicChip() {
-    const t = findTopic(currentTopicId);
-    if (!t) { topicChip.hidden = true; return; }
-    topicChip.textContent = "🎯 " + t.topic;
-    topicChip.dataset.quick = "Lass uns üben: " + t.topic;
-    topicChip.hidden = false;
   }
 
   /* View-only starter bubble for a freshly chosen topic (not persisted). */
@@ -462,13 +454,20 @@
     tutorInput.focus();
   });
 
-  /* Quick phrases */
-  $$(".tutor-panel .chip").forEach((chip) =>
-    chip.addEventListener("click", () => {
-      if (chip.classList.contains("chip-clear")) return; // handled separately
-      tutorInput.value = chip.dataset.quick;
-      tutorForm.requestSubmit();
-    })
+  /* Insert a German special character into the composer at the cursor
+     (or at the end when the field is not focused). These sit in the same
+     .chip row as before, next to the Clear button. */
+  function insertCharacter(char) {
+    const start = tutorInput.selectionStart ?? tutorInput.value.length;
+    const end = tutorInput.selectionEnd ?? start;
+    tutorInput.value =
+      tutorInput.value.slice(0, start) + char + tutorInput.value.slice(end);
+    const nextPos = start + char.length;
+    tutorInput.focus();
+    tutorInput.setSelectionRange(nextPos, nextPos);
+  }
+  $$(".tutor-quickrow .chip-insert").forEach((chip) =>
+    chip.addEventListener("click", () => insertCharacter(chip.dataset.insert))
   );
 
   /* Clear history: per-topic when a topic is selected, else the general chat */

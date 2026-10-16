@@ -255,11 +255,14 @@
           <p class="tutor-topic-hint">Topics come from your plan's lesson pack; each one keeps its own chat history.</p>
         </div>
         <div class="chat-log" id="tutorLog" aria-live="polite"></div>
-        <div class="tutor-quickrow">
-          <button class="chip" data-quick="Hallo! Wie geht es dir?">Hallo! Wie geht&apos;s?</button>
-          <button class="chip" data-quick="Ich möchte Deutsch üben.">Ich möchte üben</button>
-          <button class="chip" data-quick="Can we practice ordering food?">Practice: food</button>
-          <button class="chip chip-topic" data-topic hidden></button>
+        <div class="tutor-quickrow" aria-label="Buttons to insert German special characters into the composer">
+          <button type="button" class="chip chip-insert" data-insert="Ä" aria-label="Insert Ä" title="Insert Ä">Ä</button>
+          <button type="button" class="chip chip-insert" data-insert="ä" aria-label="Insert ä" title="Insert ä">ä</button>
+          <button type="button" class="chip chip-insert" data-insert="Ö" aria-label="Insert Ö" title="Insert Ö">Ö</button>
+          <button type="button" class="chip chip-insert" data-insert="ö" aria-label="Insert ö" title="Insert ö">ö</button>
+          <button type="button" class="chip chip-insert" data-insert="Ü" aria-label="Insert Ü" title="Insert Ü">Ü</button>
+          <button type="button" class="chip chip-insert" data-insert="ü" aria-label="Insert ü" title="Insert ü">ü</button>
+          <button type="button" class="chip chip-insert" data-insert="ß" aria-label="Insert ß (Eszett)" title="Insert ß (Eszett)">ß</button>
           <button type="button" class="chip chip-clear" id="tutorClear" aria-label="Clear tutor chat history" title="Clear tutor chat and start fresh">🗑️ Clear</button>
         </div>
         <form class="chat-input-row" id="tutorForm">

@@ -81,7 +81,8 @@ the chat bots in offline/local-fallback mode.
   Lessons section). Your session is remembered until you sign out.
 - **My Tutor** — appears in the nav once you're signed in; the tutor starts
   each session at the level your lesson plan implies (kept on your user
-  record), and remembers your
+  record) and displays it as the plan's CEFR range — A1–A2 (Beginner),
+  A2–B1 (Intermediate), or B1–C1 (Advanced) — and remembers your
   conversation (clear it any time with the 🗑️ button).
 - **Sign out** — the header's "Sign Out" button (or the button inside the
   auth modal) ends the session and hides the tutor section again.
@@ -110,4 +111,4 @@ dev-server.js   static server with .env → HTML credential injection
 
 # To Do
 - should package.json should use dexie and openai package dependancies?
-- We need to figure how to map A1, A2, B1, B2 and C1 to the correct json file.
+- Find out which OpenAI model would be best for a German AI tutor.
