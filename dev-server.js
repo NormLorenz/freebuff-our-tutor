@@ -94,8 +94,11 @@ const server = http.createServer((req, res) => {
       res.writeHead(404, { "Content-Type": "text/plain" });
       return res.end("404 Not Found: " + req.url);
     }
-    // Inject the .env-provided OpenAI credentials into served HTML.
-    if (OPENAI_API_KEY || OPENAI_MODEL) {
+    // Inject the .env-provided OpenAI credentials into served HTML only.
+    // (Applying this to every file would round-trip binary data through
+    // a string and corrupt images, fonts, SVGs, etc.)
+    const ext = path.extname(filePath).toLowerCase();
+    if ((OPENAI_API_KEY || OPENAI_MODEL) && ext === ".html") {
       let html = data.toString("utf8");
       const inject = "<script>" +
         (OPENAI_API_KEY ? "window.OPENAI_API_KEY=" + JSON.stringify(OPENAI_API_KEY) + ";" : "") +
