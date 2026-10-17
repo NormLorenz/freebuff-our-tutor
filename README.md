@@ -109,6 +109,7 @@ dev-server.js   static server with .env → HTML credential injection
 
 *Lernen, lachen, wachsen.* — learn, laugh, grow.
 
-# To Do
+# TODO's
 - should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor.
+- Consider enhancing the My Tutor section with misspelled words the tutor caught.

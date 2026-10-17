@@ -253,6 +253,16 @@ html[data-theme="dark"] .bubble-user { color: #201812; }
 /* ---------- About ---------- */
 .team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 420px)); gap: 1.5rem; justify-content: center; }
 .team-card { text-align: center; }
+.team-photo-together {
+  display: block;
+  width: min(288px, 80%);
+  height: auto;
+  aspect-ratio: 1024 / 1033;
+  object-fit: cover;
+  margin: 1.6rem auto 0;
+  border-radius: 50%;
+  border: 4px solid var(--gold);
+}
 .team-photo { width: 90px; height: 90px; margin: 0 auto 0.8rem; border-radius: 50%; border: 3px solid var(--gold); }
 .team-role { color: var(--accent); font-weight: 700; margin-top: -0.3em; }
 .team-funfact { font-size: 0.9rem; color: var(--text-soft); font-style: italic; margin-top: 0.8rem; }
