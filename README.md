@@ -113,3 +113,4 @@ dev-server.js   static server with .env → HTML credential injection
 - should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor.
 - Consider enhancing the My Tutor section with misspelled words the tutor caught — maybe show the mistakes using flashcards, listed by topic.
+- We will need a separate api service words.js, a separate menu item 'Flashcards', new json added to the topics json, which will contain the misspelled word and the correction.
