@@ -14,7 +14,8 @@ A single-page marketing + learning site with three AI-powered pieces:
 2. **Herr Grün, the AI German tutor** (My Tutor section) — a members-only chat
    that writes German at your CEFR level (A1–C1) with gentle corrections and
    English notes. You reach it via the "My Tutor" nav link that appears once
-   you are signed in.
+   you are signed in. Every mistake the tutor corrects during topic practice
+   is extracted into a structured list and kept on the practiced topic.
 3. **Local accounts** — sign up (name, email, password, and a lesson level:
    Beginner A1–A2, Intermediate A2–B1, or Advanced B1–C1) or sign in through
    the auth modal. The chosen plan is stored on the user and seeds the AI
@@ -43,6 +44,15 @@ sizes, and graceful fallbacks when offline or without an OpenAI key.
 - **AI German tutor** (`api/tutor.js`) — the "My Tutor" page section that chats
   in German at your CEFR level (A1–C1) with gentle corrections and English
   notes. Visible only to signed-in users, reachable from the nav link.
+- **Mistake extractor** (`api/mistakes.js`) — a separate ChatGPT service that
+  reads the tutor's previous ChatGPT response and returns every corrected
+  mistake as a structured entry — `{ german, english, active: true }` (the
+  mistaken German as written, a short English translation of the fix, and an
+  always-true active flag). Extracted mistakes are appended to the current
+  practice topic's `mistakes[]` list via `api/db.js`, so they accumulate per
+  topic and survive reloads. Extraction runs directly after the tutor reply
+  lands, never blocking the next message, and degrades to "no mistakes" when
+  the key is missing or the API errors.
 - **Local accounts & chat history** (`api/db.js`) — Dexie/IndexedDB storage of
   users, newsletter subscribers, chat sessions, and preferences, with
   clear-history buttons for both chat widgets.
@@ -99,7 +109,7 @@ the chat bots in offline/local-fallback mode.
 ## Project structure
 
 ```
-api/            chat.js (service bot) · tutor.js (AI tutor) · db.js (IndexedDB)
+api/            chat.js (service bot) · tutor.js (AI tutor) · mistakes.js (mistake extractor) · db.js (IndexedDB)
 public/         index.html · css/ · js/ · images/
 dev-server.js   static server with .env → HTML credential injection
 .env.example    template for your OpenAI credentials
@@ -110,7 +120,6 @@ dev-server.js   static server with .env → HTML credential injection
 *Lernen, lachen, wachsen.* — learn, laugh, grow.
 
 # TODO's
-- should package.json should use dexie and openai package dependancies?
+- Should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor.
-- Consider enhancing the My Tutor section with misspelled words the tutor caught — maybe show the mistakes using flashcards, listed by topic.
-- We will need a separate api service words.js, a separate menu item 'Flashcards', new json added to the topics json, which will contain the misspelled word and the correction.
+- Surface the active mistakes kept on each topic (mistakes.js) in the My Tutor section — maybe as flashcards listed by topic.
