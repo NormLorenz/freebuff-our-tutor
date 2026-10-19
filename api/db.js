@@ -7,10 +7,8 @@
  *                  tutorLevel, topics[], createdAt }; plan:
  *                  beginner/intermediate/advanced. `topics` is a copy of the
  *                  plan's range pack made on creation: each entry is
- *                  { id, topic, visited, history[], mistakes[] } and history
- *                  keeps the tutor messages practiced on that topic, while
- *                  mistakes holds extracted entries { german, english,
- *                  active } (see api/mistakes.js).
+ *                  { id, topic, visited, history[] } and history keeps the
+ *                  tutor messages practiced on that topic.
  *   subscribers  — monthly newsletter signups { email, subscribedAt }
  *   chatSessions — service-bot conversations { key, messages[], updatedAt }
  *   settings     — app preferences { key, value } (e.g. theme)
@@ -230,7 +228,6 @@ const UserTopics = {
       topic: t.topic,
       visited: false,
       history: [],
-      mistakes: [], // filled by api/mistakes.js as the user practices
     }));
     if (!topics.length) return null;
     await store.put("users", { ...user, topics });
@@ -260,30 +257,13 @@ const UserTopics = {
     return topics.find((t) => Number(t.id) === Number(topicId)) || null;
   },
 
-  /* Append structured mistakes [{ german, english, active }, …] from the
-   * mistakes.js ChatGPT service to a topic's mistake list and return the
-   * updated topic (null when there is nothing to append). */
-  async addMistakes(email, topicId, mistakes) {
-    const user = await Users.findByEmail(email);
-    if (!user) return null;
-    if (!Array.isArray(mistakes) || !mistakes.length) return null;
-    const topics = (Array.isArray(user.topics) ? user.topics : []).map((t) => {
-      if (Number(t.id) !== Number(topicId)) return t;
-      const list = (Array.isArray(t.mistakes) ? t.mistakes : []).concat(mistakes);
-      return { ...t, mistakes: list };
-    });
-    await store.put("users", { ...user, topics });
-    return topics.find((t) => Number(t.id) === Number(topicId)) || null;
-  },
-
   /* Wipe one topic's message history and reset its visited flag, so the
-   * topic counts as fresh again (e.g. when the Clear button is pressed).
-   * The mistake list is wiped with it — a fresh topic has no mistakes. */
+   * topic counts as fresh again (e.g. when the Clear button is pressed). */
   async clearHistory(email, topicId) {
     const user = await Users.findByEmail(email);
     if (!user) return null;
     const topics = (Array.isArray(user.topics) ? user.topics : []).map((t) =>
-      Number(t.id) === Number(topicId) ? { ...t, history: [], visited: false, mistakes: [] } : t
+      Number(t.id) === Number(topicId) ? { ...t, history: [], visited: false } : t
     );
     await store.put("users", { ...user, topics });
     return topics.find((t) => Number(t.id) === Number(topicId)) || null;

@@ -1,14 +1,13 @@
 /**
  * main.js — wires up the GutenTag UI.
  * Requires window.GutenDB (api/db.js), window.GutenChat (api/chat.js),
- * window.GutenTutor (api/tutor.js), and window.GutenMistakes (api/mistakes.js).
+ * and window.GutenTutor (api/tutor.js).
  */
 (function () {
   "use strict";
   const DB = window.GutenDB;
   const Chat = window.GutenChat;
   const Tutor = window.GutenTutor;
-  const Mistakes = window.GutenMistakes;
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -446,18 +445,6 @@
         activeTopic.visited = true;
       }
       markSelectComplete(activeTopic.id);
-      /* Mistake extraction (api/mistakes.js): a separate ChatGPT call looks
-         at the tutor's previous response and appends every corrected mistake
-         — { german, english, active: true } — to the current topic. Runs
-         after the turn is saved, without blocking the next tutor message. */
-      if (Mistakes && answer.source === "chatgpt") {
-        (async () => {
-          const mistakes = await Mistakes.extract(answer.text, tutorLevel);
-          if (!mistakes.length || !DB || !currentUser || !findTopic(currentTopicId)) return;
-          const withMistakes = await DB.UserTopics.addMistakes(currentUser.email, activeTopic.id, mistakes);
-          if (withMistakes) activeTopic.mistakes = withMistakes.mistakes || [];
-        })().catch((err) => console.warn("[main] mistake append failed:", err));
-      }
     } else {
       tutorMessages.push({ role: "user", text: q });
       tutorMessages.push({ role: "assistant", text: answer.text });
