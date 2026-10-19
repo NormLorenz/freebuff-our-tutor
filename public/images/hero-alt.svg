@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 440" role="img" aria-label="Alternative cozy German tutoring illustration with talking figures and a flip flashcard">
+  <defs>
+    <clipPath id="frameClip">
+      <rect x="0" y="0" width="640" height="440" rx="24"/>
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="640" height="440" rx="24" fill="#f8e3d3"/>
+  <g clip-path="url(#frameClip)">
+    <!-- soft evening sky -->
+    <rect x="0" y="0" width="640" height="330" fill="#fdf4e8"/>
+    <circle cx="560" cy="64" r="40" fill="#d9a53f" opacity="0.55"/>
+    <circle cx="24" cy="24" r="0" fill="none"/>
+    <!-- skyline: Berlin TV tower + rooftops -->
+    <g fill="#2f6b4f">
+      <rect x="0" y="300" width="640" height="30" opacity="0.9"/>
+      <rect x="40" y="272" width="70" height="28" rx="4" opacity="0.35"/>
+      <rect x="130" y="284" width="52" height="16" rx="4" opacity="0.3"/>
+      <rect x="470" y="278" width="64" height="22" rx="4" opacity="0.35"/>
+      <rect x="552" y="270" width="56" height="30" rx="4" opacity="0.4"/>
+    </g>
+    <!-- TV tower -->
+    <g>
+      <path d="M596 150 l8 0 l5 78 l-18 0 z" fill="#2f6b4f"/>
+      <path d="M565 228 l70 0 l0 8 l-70 0 z" fill="#2f6b4f"/>
+      <circle cx="600" cy="138" r="12" fill="#2f6b4f"/>
+      <rect x="598" y="118" width="4" height="24" fill="#2f6b4f"/>
+      <rect x="592" y="208" width="16" height="60" fill="#2f6b4f"/>
+      <circle cx="600" cy="140" r="4" fill="#d9a53f"/>
+    </g>
+    <!-- floor band -->
+    <rect x="0" y="330" width="640" height="110" fill="#2f6b4f"/>
+    <!-- café table -->
+    <rect x="230" y="322" width="200" height="16" rx="6" fill="#8a5a33"/>
+    <rect x="250" y="338" width="14" height="72" fill="#8a5a33"/>
+    <rect x="396" y="338" width="14" height="72" fill="#8a5a33"/>
+    <!-- steaming coffee cups -->
+    <g>
+      <rect x="256" y="296" width="30" height="24" rx="4" fill="#e9d9c4"/>
+      <path d="M286 302 q10 4 0 12" fill="none" stroke="#e9d9c4" stroke-width="5" stroke-linecap="round"/>
+      <path d="M264 284 q5 -8 0 -14" fill="none" stroke="#c2571b" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+      <path d="M276 284 q5 -8 0 -14" fill="none" stroke="#c2571b" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+      <rect x="368" y="296" width="30" height="24" rx="4" fill="#e9d9c4"/>
+      <path d="M398 302 q10 4 0 12" fill="none" stroke="#e9d9c4" stroke-width="5" stroke-linecap="round"/>
+      <path d="M376 284 q5 -8 0 -14" fill="none" stroke="#c2571b" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    </g>
+    <!-- pretzel on the table -->
+    <g>
+      <circle cx="332" cy="310" r="9" fill="none" stroke="#a34412" stroke-width="9"/>
+      <circle cx="350" cy="310" r="9" fill="none" stroke="#c2571b" stroke-width="9"/>
+      <path d="M336 306 q6 -8 12 0" stroke="#a34412" stroke-width="9" fill="none" stroke-linecap="round"/>
+    </g>
+    <!-- teacher, left, waving -->
+    <g>
+      <path d="M120 302 q44 -44 88 0 l0 78 l-88 0 z" fill="#c2571b"/>
+      <circle cx="164" cy="252" r="34" fill="#33261d"/>
+      <path d="M138 236 q26 -28 52 0 l0 -6 q-26 -26 -52 0 z" fill="#8a5a33"/>
+      <circle cx="206" cy="238" r="9" fill="#c2571b"/>
+      <path d="M206 246 q6 16 -8 24" fill="none" stroke="#c2571b" stroke-width="9" stroke-linecap="round" opacity="0.8"/>
+      <circle cx="140" cy="258" r="3" fill="#33261d"/>
+      <circle cx="178" cy="258" r="3" fill="#33261d"/>
+      <path d="M154 274 q12 8 24 0" fill="none" stroke="#f3e9df" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <!-- student, right, cheerful -->
+    <g>
+      <path d="M364 300 q44 -42 88 0 l0 80 l-88 0 z" fill="#2f6b4f"/>
+      <circle cx="408" cy="254" r="32" fill="#33261d"/>
+      <circle cx="386" cy="260" r="3" fill="#33261d"/>
+      <circle cx="424" cy="260" r="3" fill="#33261d"/>
+      <path d="M396 276 q14 10 28 0" fill="none" stroke="#f3e9df" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="360" cy="240" r="9" fill="#2f6b4f"/>
+      <path d="M360 248 q-6 16 8 24" fill="none" stroke="#2f6b4f" stroke-width="9" stroke-linecap="round" opacity="0.8"/>
+    </g>
+    <!-- big flip flashcard between them -->
+    <g>
+      <rect x="252" y="150" width="160" height="104" rx="16" fill="#faf6ef" stroke="#c2571b" stroke-width="6"/>
+      <rect x="236" y="138" width="8" height="128" rx="4" fill="#d9a53f"/>
+      <text x="264" y="196" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="#2f6b4f">das Haus</text>
+      <text x="264" y="230" font-family="Georgia, serif" font-size="20" fill="#6b5a4e">the house</text>
+    </g>
+    <!-- chat bubbles -->
+    <g>
+      <rect x="256" y="102" width="92" height="40" rx="12" fill="#faf6ef" stroke="#c2571b" stroke-width="3"/>
+      <path d="M268 142 l-8 16 l22 -16 z" fill="#faf6ef" stroke="#c2571b" stroke-width="3"/>
+      <text x="302" y="129" font-family="Georgia, serif" font-size="18" text-anchor="middle" fill="#c2571b">Hallo!</text>
+      <rect x="380" y="102" width="92" height="40" rx="12" fill="#faf6ef" stroke="#2f6b4f" stroke-width="3"/>
+      <path d="M452 142 l8 16 l-22 -16 z" fill="#faf6ef" stroke="#2f6b4f" stroke-width="3"/>
+      <text x="426" y="129" font-family="Georgia, serif" font-size="18" text-anchor="middle" fill="#2f6b4f">Hello!</text>
+    </g>
+    <!-- floating vocabulary chips -->
+    <g font-family="Georgia, serif" font-size="15">
+      <rect x="30" y="120" width="86" height="30" rx="15" fill="#e2efe7" stroke="#2f6b4f" stroke-width="2"/>
+      <text x="73" y="140" text-anchor="middle" fill="#2f6b4f">der Kaffee</text>
+      <rect x="46" y="180" width="96" height="30" rx="15" fill="#e2efe7" stroke="#2f6b4f" stroke-width="2" opacity="0.85"/>
+      <text x="94" y="200" text-anchor="middle" fill="#2f6b4f">das Brot</text>
+      <rect x="22" y="238" width="100" height="30" rx="15" fill="#e2efe7" stroke="#2f6b4f" stroke-width="2" opacity="0.7"/>
+      <text x="72" y="258" text-anchor="middle" fill="#2f6b4f">spazieren</text>
+    </g>
+    <!-- German flag bunting -->
+    <g>
+      <line x1="0" y1="60" x2="640" y2="40" stroke="#8a5a33" stroke-width="3" opacity="0.6"/>
+      <g>
+        <path d="M80 66 h34 v20 l-17 -7 l-17 7 z" fill="#33261d"/>
+        <path d="M80 66 h34 v7 h-34 z" fill="#d9a53f"/>
+        <path d="M80 73 h34 v6 h-34 z" fill="#b3323f"/>
+      </g>
+      <g>
+        <path d="M180 62 h34 v20 l-17 -7 l-17 7 z" fill="#33261d"/>
+        <path d="M180 62 h34 v7 h-34 z" fill="#d9a53f"/>
+        <path d="M180 69 h34 v6 h-34 z" fill="#b3323f"/>
+      </g>
+      <g>
+        <path d="M280 58 h34 v20 l-17 -7 l-17 7 z" fill="#33261d"/>
+        <path d="M280 58 h34 v7 h-34 z" fill="#d9a53f"/>
+        <path d="M280 65 h34 v6 h-34 z" fill="#b3323f"/>
+      </g>
+      <g>
+        <path d="M380 55 h34 v20 l-17 -7 l-17 7 z" fill="#33261d"/>
+        <path d="M380 55 h34 v7 h-34 z" fill="#d9a53f"/>
+        <path d="M380 62 h34 v6 h-34 z" fill="#b3323f"/>
+      </g>
+      <g>
+        <path d="M480 52 h34 v20 l-17 -7 l-17 7 z" fill="#33261d"/>
+        <path d="M480 52 h34 v7 h-34 z" fill="#d9a53f"/>
+        <path d="M480 59 h34 v6 h-34 z" fill="#b3323f"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -69,7 +69,7 @@ Rules:
         ],
         max_completion_tokens: 320,
         // gpt-5* models only accept their default temperature
-        ...( /^gpt-5/.test(MODEL) ? {} : { temperature: 0.7 } ),
+        ...(/^gpt-5/.test(MODEL) ? {} : { temperature: 0.7 }),
       }),
     });
 
@@ -118,7 +118,7 @@ Rules:
           ],
           max_completion_tokens: 300,
           // gpt-5* models only accept their default temperature
-          ...( /^gpt-5/.test(MODEL) ? {} : { temperature: 0 } ),
+          ...(/^gpt-5/.test(MODEL) ? {} : { temperature: 0 }),
         }),
       });
       if (!res.ok) return [];
