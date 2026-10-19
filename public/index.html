@@ -27,6 +27,7 @@
         <a href="#visit" class="nav-link">Visit</a>
         <a href="#about" class="nav-link">About</a>
         <a href="#tutor" class="nav-link nav-link-tutor" id="tutorNavLink" hidden>My Tutor</a>
+        <a href="#flashcards" class="nav-link nav-link-flashcards" id="flashcardsNavLink" hidden>Flashcards</a>
         <span class="nav-user" id="navUser" hidden></span>
         <button class="btn btn-primary btn-small" id="authOpenBtn">Sign In / Sign Up</button>
       </nav>
@@ -275,6 +276,37 @@
     </div>
   </section>
 
+  <!-- ===== FLASHCARDS ===== -->
+  <section class="section section-flash" id="flashcards" hidden>
+    <div class="container">
+      <div class="section-head">
+        <h2>Flashcards</h2>
+        <p>Every misspelled German word from your tutor practice, collected by user and topic. <em>Repeat aloud with me!</em></p>
+      </div>
+      <div class="flash-panel card" aria-label="Flashcard practice">
+        <div class="flash-controls">
+          <label class="visually-hidden" for="flashTopicFilter">Filter by topic</label>
+          <select id="flashTopicFilter" class="tutor-topic-select" aria-label="Filter flashcards by topic">
+            <option value="all">All topics</option>
+          </select>
+          <button type="button" class="btn btn-primary btn-small" id="flashNext" title="Deal the next random card">Next Card 🔄</button>
+          <button type="button" class="btn btn-outline btn-small" id="flashShuffle" title="Shuffle the deck">Shuffle 🔀</button>
+          <button type="button" class="btn btn-ghost btn-small" id="flashClear" aria-label="Clear all flashcards" title="Delete all stored words for your account">🗑️ Clear</button>
+        </div>
+        <p class="flash-status form-msg ok" id="flashStatus" role="status" aria-live="polite"></p>
+        <p class="flash-empty" id="flashEmpty" hidden>Sign in to collect flashcards from your tutor practice. 🥨</p>
+        <button class="flash-card" id="flashCard" hidden type="button" aria-label="Flashcard — click to flip over">
+          <span class="flash-face flash-face-front" id="flashCardFront"></span>
+          <span class="flash-face flash-face-back" id="flashCardBack"></span>
+        </button>
+        <div class="flash-actions">
+          <button type="button" class="btn btn-outline btn-small" id="flashToggleActive" hidden>Mark Inactive</button>
+        </div>
+        <div class="flash-wordlist" id="flashWordList"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== FOOTER ===== -->
   <footer class="site-footer">
     <div class="container footer-grid">
@@ -290,6 +322,7 @@
         <a href="#learn">Lessons</a>
         <a href="#visit">Visit</a>
         <a href="#about">About</a>
+        <a href="#flashcards">Flashcards</a>
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
@@ -365,6 +398,7 @@
   <script src="js/topics.js"></script>
   <script src="../api/chat.js"></script>
   <script src="../api/tutor.js"></script>
+  <script src="js/flashcards.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

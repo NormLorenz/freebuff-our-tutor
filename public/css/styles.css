@@ -344,6 +344,48 @@ html[data-theme="dark"] .auth-tab.is-active { color: #201812; }
 }
 .chip:hover { border-color: var(--primary); color: var(--primary); }
 
+/* ---------- Flashcards (per-user, harvested from tutor practice) ---------- */
+.flash-panel {
+  width: min(640px, 100%); margin: 0 auto; padding: 1.4rem;
+  display: flex; flex-direction: column; gap: 0.9rem;
+}
+.flash-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.flash-controls .tutor-topic-select { flex: 1 1 200px; min-width: 200px; width: auto; }
+.flash-status { text-align: center; margin: 0; }
+.flash-empty { text-align: center; color: var(--text-soft); font-style: italic; margin: 0.4rem 0; }
+
+/* The card: clicking it flips it over (German front → English back). */
+.flash-card {
+  position: relative; width: min(420px, 100%); aspect-ratio: 16 / 9;
+  margin: 0 auto; padding: 0; border: none; background: none; cursor: pointer;
+  perspective: 1000px; -webkit-perspective: 1000px;
+}
+.flash-face {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem;
+  border-radius: var(--radius); box-shadow: var(--shadow-small);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transition: transform 0.5s ease;
+  font-family: var(--font-head); font-size: 1.7rem; font-weight: 700;
+}
+.flash-face-front { background: var(--accent-soft); color: var(--accent); }
+.flash-face-back {
+  background: var(--primary-soft); color: var(--primary-strong);
+  transform: rotateY(180deg); font-size: 1.4rem;
+}
+.flash-card { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform 0.5s ease; }
+.flash-card.is-flipped { transform: rotateY(180deg); }
+.flash-wrong { font-family: var(--font-body); font-size: 0.72rem; font-style: italic; font-weight: 400; color: var(--red-flag); }
+.flash-actions { display: flex; justify-content: center; }
+
+/* Overview chips under the card; inactive ones sit out of the deck. */
+.flash-wordlist h4 { margin: 0.6rem 0 0; font-size: 0.9rem; color: var(--text-soft); }
+.flash-wordlist { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.flash-chip { cursor: pointer; }
+.flash-chip-inactive { opacity: 0.55; text-decoration: line-through; }
+.flash-chip-inactive::after { content: " ⛔"; text-decoration: none; }
+.flash-chip:hover { border-color: var(--accent); color: var(--accent); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; gap: 2rem; }

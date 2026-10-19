@@ -15,10 +15,12 @@ A single-page marketing + learning site with three AI-powered pieces:
    that writes German at your CEFR level (A1–C1) with gentle corrections and
    English notes. You reach it via the "My Tutor" nav link that appears once
    you are signed in.
-3. **Local accounts** — sign up (name, email, password, and a lesson level:
-   Beginner A1–A2, Intermediate A2–B1, or Advanced B1–C1) or sign in through
-   the auth modal. The chosen plan is stored on the user and seeds the AI
-   tutor's starting level for every tutor session. While signed in, the
+3. **Flashcards** (Flashcards section) — every time the live ChatGPT tutor
+   reply comes back, the misspelled German words from your message are
+   extracted and stored per user and per topic. The Flashcards section deals
+   them randomly in a flip-card deck and lets you mark a word inactive so it
+   is out of the deck until you put it back.
+4. **Local accounts** — sign up (name, email, password, and a lesson level:
    header button turns into **Sign Out** with a "Hi, *name*!" greeting next
    to it, and your chosen CEFR level plus your tutor chat history persist
    between visits. Everything is
@@ -78,14 +80,25 @@ the chat bots in offline/local-fallback mode.
 ## Using the site
 
 - **Sign up / Sign in** — via the header button (or the plan CTAs in the
-  Lessons section). Your session is remembered until you sign out.
-- **My Tutor** — appears in the nav once you're signed in; the tutor starts
-  each session at the level your lesson plan implies (kept on your user
-  record) and displays it as the plan's CEFR range — A1–A2 (Beginner),
-  A2–B1 (Intermediate), or B1–C1 (Advanced) — and remembers your
-  conversation (clear it any time with the 🗑️ button).
+  Lessons section). Your session is remembered until you sign out.- **My Tutor** — appears in the nav once you're signed in; the tutor starts
+   each session at the level your lesson plan implies (kept on your user
+   record) and displays it as the plan's CEFR range — A1–A2 (Beginner),
+   A2–B1 (Intermediate), or B1–C1 (Advanced) — and remembers your
+   conversation (clear it any time with the 🗑️ button).
+- **Flashcards** — appears in the nav once you're signed in. Every live
+   tutor ChatGPT reply harvests the misspelled German words from your
+   message (stored per user + topic). Deal random cards, click to flip the
+   German word to its English meaning, press **Mark Inactive** to take a
+   word out of the deck (click its ⛔ chip to put it back), filter by
+   topic, or clear the whole collection with 🗑️.- **Flashcards** — appears in the nav once you're signed in. Every live
+   tutor ChatGPT reply harvests the misspelled German words from your
+   message (stored per user + topic). Deal random cards (Next Card / Shuffle),
+   click the card to flip the German word to its English meaning, press
+   **Mark Inactive** to take a word out of the deck (click its ⛔ chip to
+   put it back), filter the deck by topic, or clear your whole collection
+   with 🗑️.
 - **Sign out** — the header's "Sign Out" button (or the button inside the
-  auth modal) ends the session and hides the tutor section again.
+   auth modal) ends the session and hides the tutor section again.
 
 ## Tech stack
 
@@ -99,8 +112,9 @@ the chat bots in offline/local-fallback mode.
 ## Project structure
 
 ```
-api/            chat.js (service bot) · tutor.js (AI tutor) · db.js (IndexedDB)
-public/         index.html · css/ · js/ · images/
+api/            chat.js (service bot) · tutor.js (AI tutor + vocabulary
+                harvesting) · db.js (IndexedDB incl. per-user flashcards)
+public/         index.html · css/ · js/ (topics, flashcards, main) · images/
 dev-server.js   static server with .env → HTML credential injection
 .env.example    template for your OpenAI credentials
 ```
@@ -112,4 +126,4 @@ dev-server.js   static server with .env → HTML credential injection
 # TODO's
 - Should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor
-- Create a new menu item 'Flashcards' and section that is built from mispelled German words and their English equivalent once the tutor ChatGPT call has returned. These words will be stored by user and topic. The flashcards will display words randomly and have the option to mark the word inactive. 
+- ~~Create a new menu item 'Flashcards' and section that is built from mispelled German words and their English equivalent once the tutor ChatGPT call has returned. These words will be stored by user and topic. The flashcards will display words randomly and have the option to mark the word inactive.~~ ✅ Done — see the Flashcards section description above 

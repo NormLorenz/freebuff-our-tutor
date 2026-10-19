@@ -83,6 +83,59 @@ Rules:
     return reply;
   }
 
+  /* ---------------- Flashcard harvesting ---------------- */
+
+  /* After a live ChatGPT tutor reply, run a small second call that scans
+   * the student's message together with the tutor's corrections and
+   * returns the misspelled / wrongly-used German words as strict JSON:
+   *   [{ wrong, correct, english }, …]
+   * Used by the Flashcards section (stored per user + topic). Returns []
+   * when there is no API key, nothing was found, or anything fails —
+   * harvesting is best-effort and must never break the chat.            */
+  async function extractMisspellings(userMessage, level, tutorReply) {
+    const key = getApiKey();
+    if (!key || !userMessage || !tutorReply) return [];
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            {
+              role: "system",
+              content:
+                `You harvest vocabulary from a German lesson for flashcards. The student's CEFR level is ${level}. ` +
+                "You get the student's message and the tutor's reply, which contains corrected German. " +
+                "Extract the German words from the STUDENT's message that are misspelled, wrongly used, " +
+                "or that the tutor improved. For each one give the correct German word and a short, common " +
+                "English translation. Drop proper nouns, numbers, and words the student already got right. " +
+                "Return at most 5. Answer ONLY with a strict JSON array like " +
+                '[{"wrong":"haus","correct":"Haus","english":"house"}] — no prose, no markdown.',
+            },
+            { role: "user", content: "Student (level " + level + "): " + userMessage + "\nTutor reply: " + tutorReply },
+          ],
+          max_completion_tokens: 300,
+          // gpt-5* models only accept their default temperature
+          ...( /^gpt-5/.test(MODEL) ? {} : { temperature: 0 } ),
+        }),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content || "";
+      const match = text.match(/\[[\s\S]*\]/); // first JSON array in the reply
+      if (!match) return [];
+      const parsed = JSON.parse(match[0]);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((w) => w && w.correct && w.english)
+        .slice(0, 5);
+    } catch (_) {
+      return []; // harvesting is best-effort
+    }
+  }
+
   /* ---------------- Offline practice mode ---------------- */
 
   const OFFLINE_REPLIES = [
@@ -163,5 +216,5 @@ Rules:
     }
   }
 
-  window.GutenTutor = { reply, hasKey: () => !!getApiKey() };
+  window.GutenTutor = { reply, extractMisspellings, hasKey: () => !!getApiKey() };
 })();

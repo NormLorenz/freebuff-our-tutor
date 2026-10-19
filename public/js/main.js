@@ -8,6 +8,9 @@
   const DB = window.GutenDB;
   const Chat = window.GutenChat;
   const Tutor = window.GutenTutor;
+  const Flash = window.GutenFlashcards; // Flashcards section (js/flashcards.js)
+
+  Flash.init(); // cache the section DOM + set the signed-out default
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -165,6 +168,8 @@
     navUser.textContent = currentUser ? "Hi, " + currentUser.name + "!" : "";
     $("#tutorNavLink").hidden = !currentUser;
     $("#tutor").hidden = !currentUser; // My Tutor section appears when signed in
+    $("#flashcardsNavLink").hidden = !currentUser;
+    $("#flashcards").hidden = !currentUser; // Flashcards section too (per-user words)
     if (currentUser) {
       const tier = DB && currentUser.plan ? DB.PLANS[currentUser.plan] : null;
       $("#signinMsg").textContent = "Angemeldet als " + currentUser.name +
@@ -172,11 +177,16 @@
       $("#signinMsg").className = "form-msg ok";
       loadTutorHistory();
       syncTutorLevelFromUser(); // start each tutor session at the user's level
+      if (Flash) {
+        Flash.setSignedIn(currentUser);
+        Flash.refresh(); // rebuild the user's flashcard deck
+      }
     } else {
       tutorLoaded = false;
       userTopics = [];
       currentTopicId = null;
       topicSelect.innerHTML = '<option value="">— Wähle ein Thema (choose a topic) —</option>';
+      if (Flash) Flash.setSignedIn(null); // clear the deck + show the signed-out hint
     }
   }
 
@@ -445,6 +455,18 @@
         activeTopic.visited = true;
       }
       markSelectComplete(activeTopic.id);
+      /* Once the live ChatGPT tutor reply is in, harvest the misspelled
+         German words from this turn into the user's flashcard deck
+         (stored per user + topic; see api/db.js → Flashcards). Runs in
+         the background — it must never hold up the chat. */
+      if (Flash) {
+        Flash.onTurn(currentUser.email, activeTopic.id, activeTopic.topic, {
+          text: answer.text,
+          source: answer.source,
+          studentText: q,
+          level: tutorLevel,
+        }).catch((err) => console.warn("[flashcards] harvest failed:", err));
+      }
     } else {
       tutorMessages.push({ role: "user", text: q });
       tutorMessages.push({ role: "assistant", text: answer.text });

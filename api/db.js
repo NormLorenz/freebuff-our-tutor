@@ -96,13 +96,21 @@ if (db) {
     .stores({
       tutorSessions: null,
     });
+  /* v5 — flashcards harvested from tutor practice. One row per misspelled
+   * German word per user per topic, so the Flashcards section can show
+   * every user's own collection and filter it by topic. Rows:
+   * { email, topicId, topic, german, english, active, createdAt }.        */
+  db.version(5)
+    .stores({
+      flashcards: "++id, email, topicId, active",
+    });
 }
 
 /* ------------------------------------------------------------------ */
 /* In-memory fallback (when IndexedDB/Dexie is unavailable)            */
 /* ------------------------------------------------------------------ */
 function makeMemoryStore() {
-  const tables = { users: [], subscribers: [], chatSessions: [], settings: [] };
+  const tables = { users: [], subscribers: [], chatSessions: [], settings: [], flashcards: [] };
   let seq = 1;
   const norm = (table) => (tables[table] ??= []);
   return {
@@ -282,6 +290,96 @@ const UserTopics = {
 };
 
 /* ------------------------------------------------------------------ */
+/* Flashcards — misspelled German words harvested from tutor turns      */
+/* One row per { user, topic, german word }: the wrong form the student
+/* wrote, the correct form, and its English meaning. `active` false
+counts a card out of the random practice deck until re-activated.     */
+const Flashcards = {
+  /* Normalize a German word for de-dup comparisons (case, ß, umlauts). */
+  _norm(word) {
+    return String(word || "")
+      .toLowerCase()
+      .replace(/ß/g, "ss")
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .trim();
+  },
+
+  /* Store harvested words { wrong, correct, english }[] for a user's
+   * topic. Skips empty pairs and ones already saved (same user + topic
+   * + correct word). Returns the number of NEW cards added.             */
+  async addWords(email, topicId, topic, words) {
+    if (!email || !Array.isArray(words)) return 0;
+    const existing = await store.where("flashcards", "email", email);
+    const topicRows = existing.filter(
+      (r) => Number(r.topicId) === Number(topicId)
+    );
+    const seen = new Set(topicRows.map((r) => Flashcards._norm(r.german)));
+    let added = 0;
+    for (const w of words) {
+      const german = String(w.correct || w.german || "").trim();
+      const english = String(w.english || "").trim();
+      if (!german || !english) continue;
+      const key = Flashcards._norm(german);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      await store.add("flashcards", {
+        email,
+        topicId: Number(topicId),
+        topic: String(topic || ""),
+        german,
+        wrong: String(w.wrong || w.misspelled || "").trim(),
+        english,
+        active: true,
+        createdAt: Date.now(),
+      });
+      added++;
+    }
+    return added;
+  },
+
+  /* The user's flashcards, optionally scoped to one topic or filtered to
+   * active ones for the practice deck. */
+  async list(email, { topicId = null, activeOnly = false } = {}) {
+    if (!email) return [];
+    const rows = await store.where("flashcards", "email", email);
+    return rows.filter(
+      (r) =>
+        (topicId == null || Number(r.topicId) === Number(topicId)) &&
+        (!activeOnly || r.active)
+    );
+  },
+
+  /* Count helper for the section header (active vs total). */
+  async counts(email) {
+    const rows = await Flashcards.list(email);
+    return { total: rows.length, active: rows.filter((r) => r.active).length };
+  },
+
+  /* Mark a card inactive (out of the deck) or active again. */
+  async setActive(email, id, active) {
+    const rows = await store.where("flashcards", "email", email);
+    const row = rows.find((r) => r.id === id);
+    if (!row) return null;
+    await store.put("flashcards", { ...row, active: !!active });
+    return { ...row, active: !!active };
+  },
+
+  /* Remove every stored card for the user (optionally one topic only). */
+  async clear(email, topicId = null) {
+    const rows = await Flashcards.list(email);
+    let n = 0;
+    for (const r of rows) {
+      if (topicId != null && Number(r.topicId) !== Number(topicId)) continue;
+      await store.delete("flashcards", r.id);
+      n++;
+    }
+    return n;
+  },
+};
+
+/* ------------------------------------------------------------------ */
 /* Newsletter subscribers                                              */
 /* ------------------------------------------------------------------ */
 const Subscribers = {
@@ -353,6 +451,7 @@ const Settings = {
 const GutenDB = {
   Users,
   UserTopics,
+  Flashcards,
   Subscribers,
   ChatSessions,
   Settings,
