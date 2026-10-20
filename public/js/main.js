@@ -161,6 +161,14 @@
 
   function refreshAuthState() {
     $("#signOutBtn").hidden = !currentUser;
+    /* Hero: signed-out visitors see marketing CTAs; signed-in members see
+       My Tutor + Flashcards up front (the tools behind the hidden nav links). */
+    $$(".hero-guest").forEach((el) => (el.hidden = !!currentUser));
+    $$(".hero-member").forEach((el) => (el.hidden = !currentUser));
+    if (currentUser) {
+      $("#heroMemberEyebrow").textContent =
+        "🎓 Willkommen zurück, " + currentUser.name + "! Your tools are unlocked:";
+    }
     const authBtn = $("#authOpenBtn");
     authBtn.textContent = currentUser ? "Sign Out" : "Sign In / Sign Up";
     const navUser = $("#navUser");
@@ -192,7 +200,7 @@
 
   function signOut() {
     currentUser = null;
-    localStorage.removeItem("dl-user");
+    sessionStorage.removeItem("dl-user"); // session-only: gone when the browser closes
     refreshAuthState();
     closeAuth();
     formMsg($("#signinMsg"), "Signed out. Bis bald! 👋", true);
@@ -237,7 +245,7 @@
         plan: $("#sgPlan").value,
       });
       currentUser = user;
-      localStorage.setItem("dl-user", JSON.stringify(user));
+      sessionStorage.setItem("dl-user", JSON.stringify(user)); // cleared on browser close
       // Copy the plan's topic pack onto the new user profile right away so
       // My Tutor immediately offers selectable topics.
       if (DB.UserTopics) await DB.UserTopics.ensure(user.email);
@@ -259,7 +267,7 @@
     if (!DB) { formMsg(msgEl, "Storage unavailable.", false); return; }
     try {
       currentUser = await DB.Users.authenticate($("#siEmail").value, $("#siPass").value);
-      localStorage.setItem("dl-user", JSON.stringify(currentUser));
+      sessionStorage.setItem("dl-user", JSON.stringify(currentUser)); // cleared on browser close
       showSuccess("Willkommen zurück! 👋", "Schön, dich wiederzusehen, " + currentUser.name + "! Ready to practice? Open the My Tutor section above. Viel Erfolg!");
       refreshAuthState(); // sync header button + nav immediately (was missing → header said "Sign In / Sign Up" and clicking it signed you out)
     } catch (err) {
@@ -272,7 +280,7 @@
 
   /* Restore session */
   try {
-    const saved = localStorage.getItem("dl-user");
+    const saved = sessionStorage.getItem("dl-user"); // browser-close sign-out: sessionStorage is wiped by the browser
     if (saved) currentUser = JSON.parse(saved);
     if (currentUser) refreshAuthState();
   } catch (_) { /* ignore corrupt session */ }

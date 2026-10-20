@@ -48,21 +48,30 @@
   <section class="hero" id="home">
     <div class="container hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">🥨 Willkommen! Welcome!</p>
+        <p class="eyebrow hero-guest">🥨 Willkommen! Welcome!</p>
+        <p class="eyebrow hero-member" id="heroMemberEyebrow" hidden>🎓 Willkommen zurück! Your tools are unlocked:</p>
         <h1>Learn German with a <em>warm heart</em> &amp; a friendly smile</h1>
         <p class="lead">
           Cozy, patient, and fun German lessons — powered by an AI tutor who never
           loses its Komma. From your first <strong>„Hallo“</strong> to flowing
           conversation, we take the journey with you. <em>Gemütlichkeit</em> included.
         </p>
-        <div class="hero-cta">
+        <div class="hero-cta hero-guest">
           <a href="#learn" class="btn btn-primary btn-large">Start My German Journey</a>
           <a href="#about" class="btn btn-ghost btn-large">Meet the Teachers</a>
         </div>
-        <ul class="hero-points">
+        <div class="hero-cta hero-member" hidden>
+          <a href="#tutor" class="btn btn-primary btn-large">Mein Tutor 🎙️ Practice Now</a>
+          <a href="#flashcards" class="btn btn-outline btn-large">Meine Flashcards 🃏 Review</a>
+        </div>
+        <ul class="hero-points hero-guest">
           <li><span aria-hidden="true">🎙️</span> Speak from lesson one — pronunciation coaching included</li>
           <li><span aria-hidden="true">📈</span> A1 to C1, one friendly step at a time</li>
           <li><span aria-hidden="true">🤖</span> 24/7 AI tutor practice between lessons</li>
+        </ul>
+        <ul class="hero-points hero-member" hidden>
+          <li><span aria-hidden="true">💬</span> Chat with your AI tutor at your level — anytime, any topic</li>
+          <li><span aria-hidden="true">🃏</span> Every misspelled word from practice becomes a flashcard automatically</li>
         </ul>
       </div>
       <div class="hero-art">
