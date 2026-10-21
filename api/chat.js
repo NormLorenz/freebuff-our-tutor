@@ -2,16 +2,18 @@
  * chat.js — GutenTag service Q&A bot
  *
  * Uses the ChatGPT API to answer questions about the services offered.
- * Credentials come from .env via the dev server (window.OPENAI_API_KEY),
- * or localStorage (key: "openaiApiKey") as a fallback.
+ * Live replies go through the server's own proxy (POST /api/chat), so the
+ * OPENAI_API_KEY and model name never reach the browser. As a dev-only
+ * override, a key set in localStorage ("openaiApiKey") still connects
+ * directly to OpenAI from the browser.
  *
  * Exposed as window.GutenChat.
  */
 (function () {
   "use strict";
 
-  const MODEL = window.OPENAI_MODEL || "gpt-4o-mini";
-  const API_URL = "https://api.openai.com/v1/chat/completions";
+  const API_URL = "https://api.openai.com/v1/chat/completions"; // dev override only
+  const PROXY_URL = "/api/chat";
 
   const SYSTEM_PROMPT = `
 You are "Klaus", the warm and friendly assistant for GutenTag — a German
@@ -40,13 +42,12 @@ the conversation back with a smile.`;
   function getApiKey() {
     try {
       return (
-        window.OPENAI_API_KEY ||
         localStorage.getItem("openaiApiKey") ||
         sessionStorage.getItem("openaiApiKey") ||
         ""
       );
     } catch (_) {
-      return window.OPENAI_API_KEY || "";
+      return "";
     }
   }
 
@@ -57,26 +58,43 @@ the conversation back with a smile.`;
 
   /* ---------------- ChatGPT call ---------------- */
 
-  async function askChatGPT(userMessage, history = []) {
-    const key = getApiKey();
-    if (!key) throw new Error("no API key");
-
-    const messages = [
+  /* One shared message builder + two transports:
+   *  - server proxy /api/chat (normal path; key stays server-side), or
+   *  - direct call to OpenAI with a personal localStorage key (dev only). */
+  function buildMessages(userMessage, history) {
+    return [
       { role: "system", content: SYSTEM_PROMPT },
       ...history.slice(-10),
       { role: "user", content: userMessage },
     ];
+  }
 
+  async function askViaProxy(messages) {
+    const res = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, max_completion_tokens: 300, temperature: 0.6 }),
+    });
+    if (res.status === 501) throw new Error("no API key");
+    if (!res.ok) throw new Error("API error " + res.status);
+    const data = await res.json();
+    if (!data.reply) throw new Error("empty response");
+    return data.reply;
+  }
+
+  async function askDirect(messages) {
+    const MODEL = "gpt-4o-mini"; // dev-override transport only; the server picks the model on the proxy path
     const body = { model: MODEL, messages, max_completion_tokens: 300 };
     // gpt-5* models only accept their default temperature
     if (!/^gpt-5/.test(MODEL)) body.temperature = 0.6;
-
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + getApiKey(),
+      },
       body: JSON.stringify(body),
     });
-
     if (!res.ok) {
       const detail = res.status === 401 ? "invalid API key" : "API error " + res.status;
       throw new Error(detail);
@@ -85,6 +103,11 @@ the conversation back with a smile.`;
     const reply = data.choices?.[0]?.message?.content?.trim();
     if (!reply) throw new Error("empty response");
     return reply;
+  }
+
+  async function askChatGPT(userMessage, history = []) {
+    const messages = buildMessages(userMessage, history);
+    return getApiKey() ? askDirect(messages) : askViaProxy(messages);
   }
 
   /* ---------------- Public API ---------------- */
@@ -98,7 +121,8 @@ the conversation back with a smile.`;
       return {
         text:
           "Entschuldigung! I couldn't reach the AI service just now 😔 — please try " +
-          "again in a moment. If it keeps failing, check that OPENAI_API_KEY is set in .env.",
+          "again in a moment. If it keeps failing, the server's OPENAI_API_KEY " +
+          "is not set (live replies need it on the server).",
         source: "error",
       };
     }

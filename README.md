@@ -66,10 +66,14 @@ and graceful fallbacks when offline or without an OpenAI key.
 - **Wire-up** (`public/js/main.js`) — auth modal, session restore, theme
   toggle, hero state switching, service-bot chat, and the tutor section.
 - **Zero-dependency server** (`server.js`) — plain Node.js static server
-  that loads a `.env` file and injects the OpenAI credentials into the served
-  HTML (port from `process.env.PORT`, so it works on hosting platforms) so
-  the bot and tutor answer with live ChatGPT replies *without committing any
-  secrets*.
+  that loads a `.env` file (port from `process.env.PORT`, so it works on
+  hosting platforms) and proxies the AI calls: POST `/api/chat` and
+  `/api/tutor` forward the browser's messages to OpenAI with the
+  `Authorization` header attached server-side. The OPENAI_API_KEY and model
+  name never reach the browser, so the bot and tutor answer with live
+  ChatGPT replies *without committing or leaking any secrets* (per-IP rate
+  limit: 30 requests/minute; 501 when no key is configured → the bots run
+  in offline/practice mode).
 
 ## Getting started
 
@@ -91,9 +95,9 @@ and graceful fallbacks when offline or without an OpenAI key.
 4. Open **http://localhost:3000/public/** (or whatever `PORT` you set) and
    start your German journey — *Auf geht's!*
 
-No `.env`? The site still works: open the browser console (F12) and run
-`localStorage.setItem("openaiApiKey", "sk-...")` to set a key locally, or use
-the chat bots in offline/local-fallback mode.
+No `.env`? The site still works: the chat bots run in offline/practice
+mode, and as a dev-only override you can connect directly with a personal
+key via `localStorage.setItem("openaiApiKey", "sk-...")` (browser console).
 
 ## Publish to Railway
 
@@ -177,7 +181,7 @@ railway domain                   # get your public URL
 | --- | --- |
 | Plain HTML / CSS / JavaScript | The whole site — no build step, no framework |
 | [Dexie](https://dexie.org/) (IndexedDB) | Local user accounts, topics, and flashcard decks |
-| OpenAI Chat Completions | Live ChatGPT replies for bot + tutor (+ misspelling harvesting) |
+| OpenAI Chat Completions | Live ChatGPT replies for bot + tutor (+ misspelling harvesting) — called via the server's `/api/chat` + `/api/tutor` proxy, never from the browser |
 | Node.js `http` module | The zero-dependency server (works locally and on Railway) |
 
 ### IndexedDB schema
@@ -223,8 +227,8 @@ gutentag/
 │   │       ├── a2-b1.json    # Intermediate practice topics
 │   │       └── b1-c1.json    # Advanced practice topics
 │   └── images/           # logo, hero illustrations, team portraits, favicon
-├── server.js             # zero-dependency Node static server (:PORT, .env →
-│                         #   HTML injection of the OpenAI credentials)
+├── server.js             # zero-dependency Node static server (:PORT)  +
+│                         #   OpenAI proxy /api/chat + /api/tutor
 ├── .env.example          # template for OPENAI_API_KEY / OPENAI_MODEL
 ├── .gitignore            # keeps .env, .freebuff/, caches out of git
 ├── package.json          # name/scripts only — no dependencies to install

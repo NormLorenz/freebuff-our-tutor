@@ -6,17 +6,19 @@
  * English notes when helpful. Topic conversations are persisted by main.js
  * on the user's own topic list (GutenDB.UserTopics).
  *
- * Configure the model key the same way as chat.js (localStorage
- * "openaiApiKey" or window.OPENAI_API_KEY). Without a key, a built-in
- * practice mode keeps the tutor usable offline.
+ * Live replies go through the server's own proxy (POST /api/tutor), so the
+ * OPENAI_API_KEY and model name never reach the browser. As a dev-only
+ * override, a key set in localStorage ("openaiApiKey") still connects
+ * directly to OpenAI. Without any key anywhere, a built-in practice mode
+ * keeps the tutor usable offline.
  *
  * Exposed as window.GutenTutor.
  */
 (function () {
   "use strict";
 
-  const MODEL = window.OPENAI_MODEL || "gpt-4o-mini";
-  const API_URL = "https://api.openai.com/v1/chat/completions";
+  const API_URL = "https://api.openai.com/v1/chat/completions"; // dev override only
+  const PROXY_URL = "/api/tutor";
 
   function systemPrompt(level, topic) {
     /* When a practice topic is selected, steer the roleplay toward it. */
@@ -40,39 +42,57 @@ Rules:
   spazieren) is welcome. Never overwhelm with grammar tables.`;
   }
 
+  /* ---------------- ChatGPT call ---------------- */
+
+  /* Two transports: the server proxy /api/tutor (normal path; key stays
+   * server-side), or a direct OpenAI call with a personal localStorage
+   * key (dev only). Returns null when no key is configured anywhere —
+   * the caller then switches to offline practice mode.                  */
   function getApiKey() {
     try {
       return (
-        window.OPENAI_API_KEY ||
         localStorage.getItem("openaiApiKey") ||
         sessionStorage.getItem("openaiApiKey") ||
         ""
       );
     } catch (_) {
-      return window.OPENAI_API_KEY || "";
+      return "";
     }
   }
 
-  async function askChatGPT(userMessage, level, history = [], topic = null) {
-    const key = getApiKey();
-    if (!key) return null;
+  async function askViaProxy(payload) {
+    const res = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.status === 501) return null; // no server key → practice mode
+    if (!res.ok) throw new Error("API error " + res.status);
+    const data = await res.json();
+    if (!data.reply) throw new Error("empty response");
+    return data.reply;
+  }
 
+  async function askChatGPT(userMessage, level, history = [], topic = null) {
+    const payload = {
+      messages: [
+        { role: "system", content: systemPrompt(level, topic) },
+        ...history.slice(-10),
+        { role: "user", content: userMessage },
+      ],
+      max_completion_tokens: 320,
+      temperature: 0.7,
+    };
+    if (!getApiKey()) return askViaProxy(payload);
+
+    const body = { ...payload, model: "gpt-4o-mini" }; // dev-override model; the server picks it on the proxy path
+    // gpt-5* models only accept their default temperature
+    if (/^gpt-5/.test(body.model)) delete body.temperature;
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: systemPrompt(level, topic) },
-          ...history.slice(-10),
-          { role: "user", content: userMessage },
-        ],
-        max_completion_tokens: 320,
-        // gpt-5* models only accept their default temperature
-        ...(/^gpt-5/.test(MODEL) ? {} : { temperature: 0.7 }),
-      }),
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + getApiKey() },
+      body: JSON.stringify(body),
     });
-
     if (!res.ok) {
       const detail = res.status === 401 ? "invalid API key" : "API error " + res.status;
       throw new Error(detail);
@@ -93,37 +113,42 @@ Rules:
    * when there is no API key, nothing was found, or anything fails —
    * harvesting is best-effort and must never break the chat.            */
   async function extractMisspellings(userMessage, level, tutorReply) {
-    const key = getApiKey();
-    if (!key || !userMessage || !tutorReply) return [];
+    if (!userMessage || !tutorReply) return [];
 
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            {
-              role: "system",
-              content:
-                `You harvest vocabulary from a German lesson for flashcards. The student's CEFR level is ${level}. ` +
-                "You get the student's message and the tutor's reply, which contains corrected German. " +
-                "Extract the German words from the STUDENT's message that are misspelled, wrongly used, " +
-                "or that the tutor improved. For each one give the correct German word and a short, common " +
-                "English translation. Drop proper nouns, numbers, and words the student already got right. " +
-                "Return at most 5. Answer ONLY with a strict JSON array like " +
-                '[{"wrong":"haus","correct":"Haus","english":"house"}] — no prose, no markdown.',
-            },
-            { role: "user", content: "Student (level " + level + "): " + userMessage + "\nTutor reply: " + tutorReply },
-          ],
-          max_completion_tokens: 300,
-          // gpt-5* models only accept their default temperature
-          ...(/^gpt-5/.test(MODEL) ? {} : { temperature: 0 }),
-        }),
-      });
-      if (!res.ok) return [];
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content || "";
+      const payload = {
+        messages: [
+          {
+            role: "system",
+            content:
+              `You harvest vocabulary from a German lesson for flashcards. The student's CEFR level is ${level}. ` +
+              "You get the student's message and the tutor's reply, which contains corrected German. " +
+              "Extract the German words from the STUDENT's message that are misspelled, wrongly used, " +
+              "or that the tutor improved. For each one give the correct German word and a short, common " +
+              "English translation. Drop proper nouns, numbers, and words the student already got right. " +
+              "Return at most 5. Answer ONLY with a strict JSON array like " +
+              '[{"wrong":"haus","correct":"Haus","english":"house"}] — no prose, no markdown.',
+          },
+          { role: "user", content: "Student (level " + level + "): " + userMessage + "\nTutor reply: " + tutorReply },
+        ],
+        max_completion_tokens: 300,
+        temperature: 0,
+      };
+      let text;
+      if (getApiKey()) {
+        // Dev-only direct transport with the personal localStorage key.
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + getApiKey() },
+          body: JSON.stringify({ ...payload, model: "gpt-4o-mini" }),
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        text = data.choices?.[0]?.message?.content || "";
+      } else {
+        // Normal transport: the server proxy. null ⇒ no server key.
+        text = await askViaProxy(payload) || "";
+      }
       const match = text.match(/\[[\s\S]*\]/); // first JSON array in the reply
       if (!match) return [];
       const parsed = JSON.parse(match[0]);

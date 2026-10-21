@@ -1,12 +1,14 @@
 /**
- * server.js — zero-dependency static file server for GutenTag.
+ * server.js — zero-dependency static file server + OpenAI proxy for GutenTag.
  * Start with: npm start  →  http://localhost:8000/public/
  *
- * Loads ./.env (KEY=VALUE lines) and injects OPENAI_API_KEY + OPENAI_MODEL
- * into served HTML as window.OPENAI_API_KEY / window.OPENAI_MODEL so the
- * chat bot and AI tutor use live ChatGPT replies without committing secrets.
+ * Loads ./.env (KEY=VALUE lines). The OPENAI_API_KEY + OPENAI_MODEL stay in
+ * the server process and are never sent to the browser: the client-side
+ * chat modules POST to /api/chat and /api/tutor, which forward the request
+ * to OpenAI with the Authorization header attached server-side.
  */
 const http = require("http");
+const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
@@ -56,7 +58,7 @@ const envFile = loadEnvFile();
 
 const PORT = process.env.PORT || parseInt(envFile.PORT, 10) || 8000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || envFile.OPENAI_API_KEY || "";
-const OPENAI_MODEL = process.env.OPENAI_MODEL || envFile.OPENAI_MODEL || "";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || envFile.OPENAI_MODEL || "gpt-4o-mini";
 
 function safeJoin(root, urlPath) {
   // Resolve and confine to the project root (path traversal guard)
@@ -68,6 +70,165 @@ function safeJoin(root, urlPath) {
   return resolved;
 }
 
+/* ------------------------------------------------------------------ */
+/* OpenAI proxy — POST /api/chat and /api/tutor                        */
+/* The browser sends only { messages, max_completion_tokens, heat }.    */
+/* The key/model live here and are never exposed to the browser.        */
+/* ------------------------------------------------------------------ */
+const OPENAI_HOST = "api.openai.com";
+const OPENAI_PATH = "/v1/chat/completions";
+const PROXY_BODY_LIMIT = 24 * 1024;      // max bytes of a client request
+const PROXY_MAX_COMPLETION = 800;        // hard cap on reply tokens
+const PROXY_MAX_MESSAGES = 41;           // system + last 10 turns + user
+const PROXY_MAX_CHARS = 24 * 1000;       // hard cap on total prompt chars
+
+/* Per-IP rate limit on the proxy endpoints (burglars metered per visit). */
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX_REQUESTS = 30;
+const rateHits = new Map(); // ip -> [timestamp, …]
+
+function allowRate(ip) {
+  const now = Date.now();
+  const hits = (rateHits.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (hits.length >= RATE_MAX_REQUESTS) {
+    rateHits.set(ip, hits);
+    return false;
+  }
+  hits.push(now);
+  rateHits.set(ip, hits);
+  return true;
+}
+
+function sendJson(res, code, obj) {
+  res.writeHead(code, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  res.end(JSON.stringify(obj));
+}
+
+function readJsonBody(req, limit) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > limit) {
+        reject(new Error("body too large"));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"));
+      } catch (_) {
+        reject(new Error("invalid JSON"));
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
+function validateMessages(body) {
+  const messages = body && body.messages;
+  if (!Array.isArray(messages) || messages.length < 1 || messages.length > PROXY_MAX_MESSAGES) return null;
+  let totalChars = 0;
+  for (const m of messages) {
+    if (!m || typeof m !== "object") return null;
+    if (!["system", "user", "assistant"].includes(m.role)) return null;
+    if (typeof m.content !== "string") return null;
+    totalChars += m.content.length;
+  }
+  if (totalChars > PROXY_MAX_CHARS) return null;
+  return messages;
+}
+
+function forwardToOpenAI(payload) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(payload);
+    const req = https.request(
+      {
+        host: OPENAI_HOST,
+        path: OPENAI_PATH,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + OPENAI_API_KEY,
+          "Content-Length": Buffer.byteLength(data),
+        },
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => {
+          try {
+            resolve({ status: res.statusCode, json: JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}") });
+          } catch (_) {
+            reject(new Error("bad OpenAI response"));
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.setTimeout(60000, () => req.destroy(new Error("OpenAI timeout")));
+    req.end(data);
+  });
+}
+
+async function handleOpenAiProxy(req, res) {
+  if (req.method !== "POST") {
+    return sendJson(res, 405, { error: "method not allowed" });
+  }
+  const ip = req.socket.remoteAddress || "unknown";
+  if (!allowRate(ip)) {
+    return sendJson(res, 429, { error: "too many requests — try again in a minute" });
+  }
+  if (!OPENAI_API_KEY) {
+    return sendJson(res, 501, { error: "not_configured" });
+  }
+
+  let body;
+  try {
+    body = await readJsonBody(req, PROXY_BODY_LIMIT);
+  } catch (err) {
+    return sendJson(res, 400, { error: err.message });
+  }
+
+  const messages = validateMessages(body);
+  if (!messages) {
+    return sendJson(res, 400, { error: "invalid messages array" });
+  }
+
+  const maxCompletion = Math.min(
+    Math.max(parseInt(body.max_completion_tokens, 10) || 320, 1),
+    PROXY_MAX_COMPLETION
+  );
+  const payload = { model: OPENAI_MODEL, messages, max_completion_tokens: maxCompletion };
+  // gpt-5* models only accept their default temperature
+  if (!/^gpt-5/.test(OPENAI_MODEL)) {
+    const temperature = parseFloat(body.temperature);
+    if (!isNaN(temperature)) payload.temperature = Math.min(Math.max(temperature, 0), 2);
+  }
+
+  try {
+    const out = await forwardToOpenAI(payload);
+    const reply = out.json && out.json.choices &&
+      out.json.choices[0] && out.json.choices[0].message &&
+      out.json.choices[0].message.content;
+    if (out.status !== 200 || !reply) {
+      return sendJson(res, out.status === 401 ? 502 : out.status || 502, {
+        error: "openai_error",
+        status: out.status || 0,
+      });
+    }
+    return sendJson(res, 200, { reply: reply.trim() });
+  } catch (_) {
+    return sendJson(res, 502, { error: "openai_unreachable" });
+  }
+}
+
 const server = http.createServer((req, res) => {
   // Friendly entry points: "/" and "/public" redirect to "/public/" so the
   // browser actually lands there. index.html references its assets with
@@ -77,6 +238,12 @@ const server = http.createServer((req, res) => {
   if (urlPath === "/" || urlPath === "/public") {
     res.writeHead(301, { Location: "/public/" });
     return res.end();
+  }
+
+  // AI proxy endpoints (same origin — no CORS, no exposed credentials)
+  if (urlPath === "/api/chat" || urlPath === "/api/tutor") {
+    handleOpenAiProxy(req, res);
+    return;
   }
 
   const pathname = safeJoin(ROOT, req.url || "/");
@@ -97,21 +264,6 @@ const server = http.createServer((req, res) => {
     if (err) {
       res.writeHead(404, { "Content-Type": "text/plain" });
       return res.end("404 Not Found: " + req.url);
-    }
-    // Inject the .env-provided OpenAI credentials into served HTML only.
-    // (Applying this to every file would round-trip binary data through
-    // a string and corrupt images, fonts, SVGs, etc.)
-    const ext = path.extname(filePath).toLowerCase();
-    if ((OPENAI_API_KEY || OPENAI_MODEL) && ext === ".html") {
-      let html = data.toString("utf8");
-      const inject = "<script>" +
-        (OPENAI_API_KEY ? "window.OPENAI_API_KEY=" + JSON.stringify(OPENAI_API_KEY) + ";" : "") +
-        (OPENAI_MODEL ? "window.OPENAI_MODEL=" + JSON.stringify(OPENAI_MODEL) + ";" : "") +
-        "</script>";
-      // Prefer the head slug; fall back to the first <script> tag.
-      if (html.includes("</head>")) html = html.replace("</head>", inject + "\n</head>");
-      else html = html.replace("<script>", inject + "\n<script>");
-      data = Buffer.from(html, "utf8");
     }
     res.writeHead(200, { "Content-Type": contentType(filePath) });
     res.end(data);
@@ -138,14 +290,16 @@ server.listen(PORT, () => {
   console.log("  Root:      http://localhost:" + PORT + "/  (redirects home)");
   console.log("  Railway:   bare root URL redirects home automatically");
   console.log("");
+  console.log("  AI proxy:  /api/chat + /api/tutor (OpenAI key stays server-side)");
   if (OPENAI_API_KEY) {
     console.log("  OpenAI key loaded from .env → live ChatGPT replies enabled.");
     if (OPENAI_MODEL) console.log("  Model:             " + OPENAI_MODEL);
   } else {
-    console.log("  No .env credentials found. For live ChatGPT replies,");
-    console.log("  either add OPENAI_API_KEY to .env, or open the browser");
-    console.log("  console (F12) and run");
-    console.log('  localStorage.setItem("openaiApiKey", "sk-...")');
+    console.log("  No .env credentials found. The bots run in offline/practice");
+    console.log("  mode until OPENAI_API_KEY is set in .env (or the Railway");
+    console.log("  environment). A personal key via localStorage still works");
+    console.log('  as a direct-connect dev override:');
+    console.log('    localStorage.setItem("openaiApiKey", "sk-...")');
   }
   console.log("");
   console.log("  Press Ctrl+C to stop.");
