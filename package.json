@@ -4,7 +4,7 @@
   "private": true,
   "description": "GutenTag — friendly German tutoring website with AI service chat bot and AI German tutor (Dexie/IndexedDB + ChatGPT)",
   "scripts": {
-    "start": "node dev-server.js",
-    "dev": "node dev-server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   }
 }

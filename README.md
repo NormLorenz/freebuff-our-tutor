@@ -65,7 +65,7 @@ and graceful fallbacks when offline or without an OpenAI key.
   CEFR-themed practice topics per range (A1–A2, A2–B1, B1–C1).
 - **Wire-up** (`public/js/main.js`) — auth modal, session restore, theme
   toggle, hero state switching, service-bot chat, and the tutor section.
-- **Zero-dependency server** (`dev-server.js`) — plain Node.js static server
+- **Zero-dependency server** (`server.js`) — plain Node.js static server
   that loads a `.env` file and injects the OpenAI credentials into the served
   HTML (port from `process.env.PORT`, so it works on hosting platforms) so
   the bot and tutor answer with live ChatGPT replies *without committing any
@@ -97,9 +97,13 @@ the chat bots in offline/local-fallback mode.
 
 ## Publish to Railway
 
-Railway runs the same server (`npm start` → `node dev-server.js`); the app
+Railway runs the same server (`npm start` → `node server.js`); the app
 reads `PORT` from the environment, which Railway sets automatically, so no
-code changes are needed.
+code changes are needed. Visiting the Railway root URL
+(`https://<app>.up.railway.app`) now works directly: the server 301-
+redirects `/` to `/public/`, because `index.html` references its assets
+with relative paths (`css/`, `js/`, `images/`) that only resolve under
+`/public/`.
 
 ### Option A — Deploy from GitHub (recommended)
 
@@ -201,7 +205,7 @@ gutentag/
 │   │       ├── a2-b1.json    # Intermediate practice topics
 │   │       └── b1-c1.json    # Advanced practice topics
 │   └── images/           # logo, hero illustrations, team portraits, favicon
-├── dev-server.js         # zero-dependency Node static server (:PORT, .env →
+├── server.js             # zero-dependency Node static server (:PORT, .env →
 │                         #   HTML injection of the OpenAI credentials)
 ├── .env.example          # template for OPENAI_API_KEY / OPENAI_MODEL
 ├── .gitignore            # keeps .env, .freebuff/, caches out of git
@@ -226,6 +230,9 @@ Notes:
 
 - Should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor
+- ~~Railway default networking URL is https://freebuff-our-tutor-production.up.railway.app/public/#home instead of https://freebuff-our-tutor-production.up.railway.app. Why?~~ ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
+- ChatGPT history issue. It is forgetting my name.
+- ~~Rename dev-server.js to server.js~~ ✅ Done
 - ~~Sign out the user when the browser is closed.~~ ✅ Done — the session is
   stored in `sessionStorage`, which the browser clears on close (see
   `public/js/main.js` → Restore session).

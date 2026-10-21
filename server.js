@@ -1,5 +1,5 @@
 /**
- * dev-server.js — zero-dependency static file server for GutenTag.
+ * server.js — zero-dependency static file server for GutenTag.
  * Start with: npm start  →  http://localhost:8000/public/
  *
  * Loads ./.env (KEY=VALUE lines) and injects OPENAI_API_KEY + OPENAI_MODEL
@@ -69,6 +69,16 @@ function safeJoin(root, urlPath) {
 }
 
 const server = http.createServer((req, res) => {
+  // Friendly entry points: "/" and "/public" redirect to "/public/" so the
+  // browser actually lands there. index.html references its assets with
+  // relative paths (css/, js/, images/) — serving it at the root URL would
+  // make those resolve to /css/styles.css etc. and 404.
+  const urlPath = decodeURIComponent((req.url || "/").split("?")[0]).split("#")[0];
+  if (urlPath === "/" || urlPath === "/public") {
+    res.writeHead(301, { Location: "/public/" });
+    return res.end();
+  }
+
   const pathname = safeJoin(ROOT, req.url || "/");
   if (!pathname) {
     res.writeHead(403);
@@ -81,12 +91,6 @@ const server = http.createServer((req, res) => {
   const isDir = pathname.endsWith(path.sep) || (fs.existsSync(pathname) && fs.statSync(pathname).isDirectory());
   if (isDir) {
     filePath = path.join(rootResolved, "public", "index.html");
-  }
-
-  // Friendly entry points: exactly "/" or "/public" redirect to the site home
-  if (!isDir && (pathname === rootResolved || pathname === path.join(rootResolved, "public"))) {
-    res.writeHead(301, { Location: "/public/" });
-    return res.end();
   }
 
   fs.readFile(filePath, (err, data) => {
@@ -132,6 +136,7 @@ server.listen(PORT, () => {
   console.log("  --------------------------------");
   console.log("  Home:      http://localhost:" + PORT + "/public/");
   console.log("  Root:      http://localhost:" + PORT + "/  (redirects home)");
+  console.log("  Railway:   bare root URL redirects home automatically");
   console.log("");
   if (OPENAI_API_KEY) {
     console.log("  OpenAI key loaded from .env → live ChatGPT replies enabled.");
