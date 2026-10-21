@@ -180,6 +180,24 @@ railway domain                   # get your public URL
 | OpenAI Chat Completions | Live ChatGPT replies for bot + tutor (+ misspelling harvesting) |
 | Node.js `http` module | The zero-dependency server (works locally and on Railway) |
 
+### IndexedDB schema
+
+The database (`GutenTagDB`, Dexie v5 after live migrations v1–v5) holds five
+tables, all stored in the visitor's browser:
+
+| Table (v5 index schema) | Stores | Key fields |
+| --- | --- | --- |
+| `users` (`++id, &email, name, plan, tutorLevel, createdAt`) | Signed-up students | `plan` = beginner/intermediate/advanced; `topics[]` = per-user copy of that plan's topic pack, each `{ id, topic, visited, history[] }` with the tutor messages practiced; `tutorLevel` seeds the tutor |
+| `subscribers` (`++id, &email, subscribedAt`) | Newsletter signups | one row per email (unique) |
+| `chatSessions` (`++id, &key, updatedAt`) | Service-bot (Klaus) conversations | `key` unique per visitor, `messages[]` is the transcript |
+| `settings` (`&key`) | App preferences (e.g. theme) | `key`/`value` pairs |
+| `flashcards` (`++id, email, topicId, active`) | Misspelled German words harvested from tutor replies | one row per word per user per topic `{ email, topicId, topic, german, english, active, createdAt }` |
+
+The `tutorSessions` table existed in v1–v3 and was deleted in v4 — topic
+conversations now live on the user's topic list, and the no-topic chat is
+session-scoped. When Dexie/IndexedDB is unavailable, everything above falls
+back to an in-memory store for that page visit.
+
 ## Project structure
 ```
 gutentag/
