@@ -48,13 +48,15 @@ and graceful fallbacks when offline or without an OpenAI key.
   marketing vs. signed-in My Tutor/Flashcards CTAs), lesson plans (Beginner
   €39 → Intermediate €59 → Advanced €89), visit/contact info with newsletter
   signup and the chat bot, about the team, and a sign-in/sign-up modal.
-- **AI service chat bot** (`api/chat.js`) — answers questions about lessons,
-  prices, and how it all works, with live ChatGPT replies.
-- **AI German tutor** (`api/tutor.js`) — the "My Tutor" section that chats in
-  German at your CEFR level (A1–C1) with gentle corrections and English
-  notes. Also harvests misspellings from each tutor turn for the flashcard
-  deck, and falls back to a built-in offline practice mode without a key.
-- **Local accounts, topics & flashcards** (`api/db.js`) — Dexie/IndexedDB
+- **AI service chat bot** (`public/js/chat.js` + Vercel function
+  `api/chat.js`) — answers questions about lessons, prices, and how it all
+  works, with live ChatGPT replies.
+- **AI German tutor** (`public/js/tutor.js` + Vercel function
+  `api/tutor.js`) — the "My Tutor" section that chats in German at your
+  CEFR level (A1–C1) with gentle corrections and English notes. Also
+  harvests misspellings from each tutor turn for the flashcard deck, and
+  falls back to a built-in offline practice mode without a key.
+- **Local accounts, topics & flashcards** (`public/js/db.js`) — Dexie/IndexedDB
   storage of users (with per-user topic packs copied from the plan at
   signup and per-topic chat history), flashcards, newsletter subscribers,
   chat sessions, and preferences, with clear-history buttons for both chat
@@ -65,15 +67,19 @@ and graceful fallbacks when offline or without an OpenAI key.
   CEFR-themed practice topics per range (A1–A2, A2–B1, B1–C1).
 - **Wire-up** (`public/js/main.js`) — auth modal, session restore, theme
   toggle, hero state switching, service-bot chat, and the tutor section.
-- **Zero-dependency server** (`server.js`) — plain Node.js static server
-  that loads a `.env` file (port from `process.env.PORT`, so it works on
-  hosting platforms) and proxies the AI calls: POST `/api/chat` and
-  `/api/tutor` forward the browser's messages to OpenAI with the
-  `Authorization` header attached server-side. The OPENAI_API_KEY and model
-  name never reach the browser, so the bot and tutor answer with live
-  ChatGPT replies *without committing or leaking any secrets* (per-IP rate
-  limit: 30 requests/minute; 501 when no key is configured → the bots run
-  in offline/practice mode).
+- **Static site + serverless AI proxy** — Vercel serves the `public/`
+  folder as-is (no build step) and turns `api/chat.js` + `api/tutor.js`
+  into Serverless Functions: POST `/api/chat` and `/api/tutor` forward the
+  browser's messages to OpenAI with the `Authorization` header attached
+  server-side. The OPENAI_API_KEY and model name never reach the browser,
+  so the bot and tutor answer with live ChatGPT replies *without
+  committing or leaking any secrets* (per-IP rate limit: 30
+  requests/minute; 501 when no key is configured → the bots run in
+  offline/practice mode).
+- **Local dev server** (`server.js`) — zero-dependency Node static server
+  for `npm start`. It loads a `.env` file (port from `process.env.PORT` or
+  the file) and runs the *same* proxy handler as the Vercel functions
+  (`api/_lib/openai-proxy.js`), so local and production behave identically.
 
 ## Getting started
 
@@ -99,58 +105,65 @@ No `.env`? The site still works: the chat bots run in offline/practice
 mode, and as a dev-only override you can connect directly with a personal
 key via `localStorage.setItem("openaiApiKey", "sk-...")` (browser console).
 
-## Publish to Railway
+## Deploy to Vercel
 
-Railway runs the same server (`npm start` → `node server.js`); the app
-reads `PORT` from the environment, which Railway sets automatically, so no
-code changes are needed. Visiting the Railway root URL
-(`https://<app>.up.railway.app`) now works directly: the server 301-
-redirects `/` to `/public/`, because `index.html` references its assets
-with relative paths (`css/`, `js/`, `images/`) that only resolve under
-`/public/`.
+Vercel is zero-config for this app: `vercel.json` skips the build step and
+serves the contents of `public/` as the site root — so the bare root URL
+(`/`) serves `index.html` directly and its relative asset paths (`css/`,
+`js/`, `images/`, `data/`) resolve without any redirect. Every file in
+`api/` becomes a **Serverless Function**: `/api/chat` and `/api/tutor`
+proxy ChatGPT server-side in production, just like the old Node server.
+(`npm start` is not used by Vercel — it only runs `server.js` for local
+dev, and it reuses the identical proxy handler.)
 
 ### Option A — Deploy from GitHub (recommended)
 
 1. Push this repository to GitHub — it is the deploy source. It is at
    <https://github.com/NormLorenz/freebuff-our-tutor.git>.
-2. Go to <https://railway.new> → **Deploy from GitHub repo** → pick this repo
-   (sign in with GitHub first if asked).
-3. Railway auto-detects Node.js and runs `npm start`. Nothing to configure.
-4. Add your OpenAI credentials: in the service → **Variables** tab, add
+2. Go to <https://vercel.com/new> → click **Import Git Repository** → pick
+   this repo (sign in with GitHub first if asked).
+3. Vercel auto-detects a static project ("Other" preset, no build step).
+   Leave the settings as imported and click **Deploy** — `vercel.json`
+   already points the Output Directory at `public/`.
+4. Add your OpenAI credentials: project → **Settings → Environment
+   Variables**, add
 
    | Variable | Value |
    | --- | --- |
    | `OPENAI_API_KEY` | `sk-...` |
-   | `OPENAI_MODEL` | `gpt-5.6-luna` (optional; defaults to `gpt-4o-mini`) |
+   | `OPENAI_MODEL` | `gpt-5.6-luna` (optional; any ChatGPT-compatible model works) |
 
-   ⚠️ This app is a demo and passes the key to the browser for direct API
-   calls, so the key is visible in the served HTML. Use a scoped, low-limit
-   key and rotate it if it leaks.
-5. Create a public URL: service → **Settings → Networking** → **Generate
-   Domain** (or add a custom domain). `/` redirects to `/public/`, the site
-   home.
+   then **Deployments → ⋯ → Redeploy** once so the functions pick them up.
+   Without a key the site still works fully — both bots run in
+   offline/practice mode.
+5. Your URL: **https://<project>.vercel.app** (the deployment preview URL
+   already works; add a custom domain via **Settings → Domains**).
 
-### Option B — Railway CLI
+### Option B — Vercel CLI
 
 ```
-npm i -g @railway/cli
-railway login
-railway init                     # create the project in the repo root
-railway variables set OPENAI_API_KEY=sk-... OPENAI_MODEL=gpt-5.6-luna
-railway up                       # deploy (auto-detect: npm start)
-railway domain                   # get your public URL
+npm i -g vercel
+vercel login
+vercel                          # preview deploy; first run asks to link
+vercel env add OPENAI_API_KEY production        # paste the sk-... key
+vercel env add OPENAI_MODEL production          # optional, e.g. gpt-5.6-luna
+vercel --prod                   # production deploy with env vars attached
 ```
 
 ### After deploying
 
 - Redeploys happen automatically on every push to the connected branch.
-- **Do not commit your real `.env`** — set credentials as Railway variables
-  instead. Railway injects them into `process.env`, which the server prefers
-  over any committed file.
+- **Do not commit your real `.env`** — set credentials as Vercel
+  environment variables instead (Dashboard or `vercel env add`). On Vercel
+  the functions read `process.env`; locally `server.js` prefers real env
+  vars over any committed `.env` file, mirroring that behavior.
 - Persistent data (accounts, flashcards, chats, theme) lives in each
-  visitor's browser (IndexedDB), not on Railway — redeploying or replacing a
-  deployment loses no user data.
-- Logs: `railway logs` (CLI) or the service's **Deployments → View Logs**.
+  visitor's browser (IndexedDB), not on the server — redeploying or
+  replacing a deployment loses no user data.
+- Logs: project → **Deployments** → click the deployment → **Runtime
+  Logs** (or `vercel logs` with the CLI).
+- Note: the per-IP rate limit (30 requests/minute) on `/api/*` counts per
+  serverless-function instance.
 
 ## Using the site
 
@@ -182,7 +195,8 @@ railway domain                   # get your public URL
 | Plain HTML / CSS / JavaScript | The whole site — no build step, no framework |
 | [Dexie](https://dexie.org/) (IndexedDB) | Local user accounts, topics, and flashcard decks |
 | OpenAI Chat Completions | Live ChatGPT replies for bot + tutor (+ misspelling harvesting) — called via the server's `/api/chat` + `/api/tutor` proxy, never from the browser |
-| Node.js `http` module | The zero-dependency server (works locally and on Railway) |
+| Vercel (static + Serverless Functions) | Hosting in production — serves `public/` at the site root; `api/chat.js` + `api/tutor.js` run the OpenAI proxy |
+| Node.js `http` module | The zero-dependency local dev server (`server.js`) |
 
 ### IndexedDB schema
 
@@ -205,41 +219,50 @@ back to an in-memory store for that page visit.
 ## Project structure
 ```
 gutentag/
-├── api/                  # AI + data layer (browser globals, no imports)
-│   ├── chat.js           # GutenChat — service bot ("Klaus") ChatGPT Q&A
-│   ├── tutor.js          # GutenTutor — level-aware German tutor +
-│   │                     #   misspelling harvesting + offline practice mode
-│   └── db.js             # GutenDB — Dexie/IndexedDB: users, topic packs,
-│                         #   flashcards, subscribers, chat sessions, settings
-├── public/
+├── public/               # the whole static frontend (Vercel serves it at /)
 │   ├── index.html        # single-page site — hero, plans, visit, about,
 │   │                     #   auth modal, My Tutor + Flashcards sections
 │   ├── css/
 │   │   └── styles.css    # the entire design system (light/dark, responsive)
-│   ├── js/
-│   │   ├── main.js       # wire-up: auth/session, hero swapping, theme,
-│   │   │                 #   service bot + tutor + flashcard wiring
-│   │   ├── flashcards.js # GutenFlashcards — deck UI for harvested words
-│   │   └── topics.js     # GutenTopics — loads the per-range topic packs
+│   ├── js/               # browser scripts — loaded in this order (no bundling)
+│   │   ├── db.js         # 1. GutenDB — Dexie/IndexedDB: users, topic packs,
+│   │   │                 #    flashcards, subscribers, chat sessions, settings
+│   │   ├── topics.js     # 2. GutenTopics — loads the per-range topic packs
+│   │   ├── chat.js       # 3. GutenChat — service bot ("Klaus") ChatGPT Q&A
+│   │   ├── tutor.js      # 4. GutenTutor — level-aware German tutor +
+│   │   │                 #    misspelling harvesting + offline practice mode
+│   │   ├── flashcards.js # 5. GutenFlashcards — deck UI for harvested words
+│   │   └── main.js       # 6. wire-up: auth/session, hero swapping, theme,
+│   │                     #    service bot + tutor + flashcard wiring
 │   ├── data/
 │   │   └── topics/
 │   │       ├── a1-a2.json    # Beginner practice topics
 │   │       ├── a2-b1.json    # Intermediate practice topics
 │   │       └── b1-c1.json    # Advanced practice topics
 │   └── images/           # logo, hero illustrations, team portraits, favicon
-├── server.js             # zero-dependency Node static server (:PORT)  +
-│                         #   OpenAI proxy /api/chat + /api/tutor
-├── .env.example          # template for OPENAI_API_KEY / OPENAI_MODEL
-├── .gitignore            # keeps .env, .freebuff/, caches out of git
+├── api/                  # Vercel Serverless Functions — OpenAI proxy
+│   ├── chat.js           # POST /api/chat — proxies OpenAI (Klaus)
+│   ├── tutor.js          # POST /api/tutor — proxies OpenAI (Herr Grün)
+│   └── _lib/
+│       └── openai-proxy.js  # shared handler: validation, rate limit,
+│                         #   OpenAI call (functions + server.js both use it)
+├── server.js             # zero-dependency local dev server (`npm start`):
+│                         #   static files + redirect, same proxy handler
+├── vercel.json           # no build step — serve public/ as the site root
+├── .env.example          # template for OPENAI_API_KEY / OPENAI_MODEL / PORT
+├── .gitignore            # keeps .env, .freebuff/, node_modules, caches out of git
 ├── package.json          # name/scripts only — no dependencies to install
-└── package-lock.json     # lockfile (kept for tools that expect one)
+├── package-lock.json     # lockfile (kept for tools that expect one)
+└── README.md             # this file
 ```
 
 Notes:
-- The `api/*.js` and `public/js/*.js` files expose plain browser globals
-  (`window.GutenChat`, `window.GutenTutor`, `window.GutenDB`,
-  `window.GutenTopics`, `window.GutenFlashcards`) — load order in
-  `index.html` matters, there is no module bundling.
+- The `public/js/*.js` files expose plain browser globals
+  (`window.GutenDB`, `window.GutenTopics`, `window.GutenChat`,
+  `window.GutenTutor`, `window.GutenFlashcards`) — load order in
+  `index.html` matters (see the numbered tree above), there is no module
+  bundling. The `api/*.js` files are Vercel Serverless Functions
+  (CommonJS) — they are never loaded by the browser.
 - User data never reaches the server: everything is stored in the visitor's
   browser (IndexedDB + `sessionStorage`), so the folders above are the whole
   deployment.

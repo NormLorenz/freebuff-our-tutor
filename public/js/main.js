@@ -1,7 +1,7 @@
 /**
  * main.js — wires up the GutenTag UI.
- * Requires window.GutenDB (api/db.js), window.GutenChat (api/chat.js),
- * and window.GutenTutor (api/tutor.js).
+ * Requires window.GutenDB (js/db.js), window.GutenChat (js/chat.js),
+ * and window.GutenTutor (js/tutor.js).
  */
 (function () {
   "use strict";
@@ -288,7 +288,7 @@
   $("#authSuccessClose").addEventListener("click", closeAuth);
 
   /* ================================================================
-     Service bot (Visit section) — via api/chat.js + DB persistence
+     Service bot (Visit section) — via js/chat.js + DB persistence
      ================================================================ */
   const chatLog = $("#chatLog");
   const chatForm = $("#chatForm");
@@ -346,7 +346,7 @@
   });
 
   /* ================================================================
-     Tutor section (My Tutor) — via api/tutor.js; per-topic history lives
+     Tutor section (My Tutor) — via js/tutor.js; per-topic history lives
      on the user profile (DB.UserTopics), the no-topic chat is session-only
      ================================================================ */
   function loadTutorHistory() {
@@ -375,7 +375,7 @@
   }
 
   /* Topics come from the copy of the plan's range pack stored on the user
-     profile (see api/db.js → UserTopics). The select lists them with ✓ for      visited ones; the chip starts practicing the selected topic and the
+     profile (see js/db.js → UserTopics). The select lists them with ✓ for      visited ones; the chip starts practicing the selected topic and the
      tutor messages for that topic are kept in its history. */
   function findTopic(id) {
     return userTopics.find((t) => Number(t.id) === Number(id)) || null;
@@ -465,7 +465,7 @@
       markSelectComplete(activeTopic.id);
       /* Once the live ChatGPT tutor reply is in, harvest the misspelled
          German words from this turn into the user's flashcard deck
-         (stored per user + topic; see api/db.js → Flashcards). Runs in
+         (stored per user + topic; see js/db.js → Flashcards). Runs in
          the background — it must never hold up the chat. */
       if (Flash) {
         Flash.onTurn(currentUser.email, activeTopic.id, activeTopic.topic, {

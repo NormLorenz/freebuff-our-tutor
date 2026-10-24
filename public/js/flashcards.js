@@ -4,7 +4,7 @@
  * A per-user flashcard deck harvested from tutor practice: every time a
  * live ChatGPT tutor reply comes back (main.js → GutenFlashcards.onTurn),
  * the misspelled German words from that turn are stored by user + topic
- * (api/db.js → GutenDB.Flashcards). This module then deals them randomly
+ * (js/db.js → GutenDB.Flashcards). This module then deals them randomly
  * in the Flashcards section and lets the learner mark a word inactive so
  * it drops out of the deck.
  *
