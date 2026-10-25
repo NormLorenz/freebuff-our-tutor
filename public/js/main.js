@@ -8,7 +8,7 @@
   const DB = window.GutenDB;
   const Chat = window.GutenChat;
   const Tutor = window.GutenTutor;
-  const Flash = window.GutenFlashcards; // Flashcards section (js/flashcards.js)
+  const Flash = window.GutenFlashcards; // Flashcards tab (js/flashcards.js)
 
   Flash.init(); // cache the section DOM + set the signed-out default
 
@@ -162,7 +162,7 @@
   function refreshAuthState() {
     $("#signOutBtn").hidden = !currentUser;
     /* Hero: signed-out visitors see marketing CTAs; signed-in members see
-       My Tutor + Flashcards up front (the tools behind the hidden nav links). */
+       My Tutor (chat + flashcards tabs) up front. */
     $$(".hero-guest").forEach((el) => (el.hidden = !!currentUser));
     $$(".hero-member").forEach((el) => (el.hidden = !currentUser));
     if (currentUser) {
@@ -176,8 +176,6 @@
     navUser.textContent = currentUser ? "Hi, " + currentUser.name + "!" : "";
     $("#tutorNavLink").hidden = !currentUser;
     $("#tutor").hidden = !currentUser; // My Tutor section appears when signed in
-    $("#flashcardsNavLink").hidden = !currentUser;
-    $("#flashcards").hidden = !currentUser; // Flashcards section too (per-user words)
     if (currentUser) {
       const tier = DB && currentUser.plan ? DB.PLANS[currentUser.plan] : null;
       $("#signinMsg").textContent = "Angemeldet als " + currentUser.name +
@@ -522,4 +520,23 @@
     currentTopicId = topicSelect.value ? Number(topicSelect.value) : null;
     await showTopicView();
   });
+
+  /* ================================================================
+     My Tutor tabs: Chat ↔ Flashcards
+     ================================================================ */
+  function showTutorTab(which) {
+    const isChat = which === "chat";
+    $("#tutorTabChat").classList.toggle("is-active", isChat);
+    $("#tutorTabFlash").classList.toggle("is-active", !isChat);
+    $("#tutorTabChat").setAttribute("aria-selected", String(isChat));
+    $("#tutorTabFlash").setAttribute("aria-selected", String(!isChat));
+    $("#tutorChatPane").hidden = !isChat;
+    $("#tutorFlashPane").hidden = isChat;
+  }
+  $$(".tutor-tab").forEach((tab) =>
+    tab.addEventListener("click", () => showTutorTab(tab.dataset.tutorTab))
+  );
+
+  /* Hero flashcard CTA jumps into My Tutor with the Flashcards tab open. */
+  $("#heroFlashCta").addEventListener("click", () => showTutorTab("flashcards"));
 })();

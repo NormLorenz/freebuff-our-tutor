@@ -313,6 +313,18 @@ html[data-theme="dark"] .auth-tab.is-active { color: #201812; }
 .auth-success-emoji { font-size: 3rem; margin: 0; }
 
 /* ---------- Tutor panel (in-page "My Tutor" section) ---------- */
+/* Pills between the Chat and Flashcards panes (same look as auth-tabs) */
+.tutor-tabs {
+  display: flex; gap: 0.4rem; margin: 0 auto 1.4rem; max-width: 420px;
+  background: var(--bg-alt); padding: 0.3rem; border-radius: 999px;
+}
+.tutor-tab {
+  flex: 1; padding: 0.55rem; border: none; border-radius: 999px; background: transparent;
+  font-family: inherit; font-size: 0.95rem; font-weight: 700; color: var(--text-soft); cursor: pointer;
+}
+.tutor-tab.is-active { background: var(--primary); color: #fff; }
+html[data-theme="dark"] .tutor-tab.is-active { color: #201812; }
+.tutor-pane { width: 100%; }
 .tutor-panel {
   width: min(560px, 100%); margin: 0 auto; padding: 1.2rem;
   display: flex; flex-direction: column; gap: 0.8rem;

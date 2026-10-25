@@ -1,12 +1,12 @@
 /**
- * flashcards.js — GutenTag Flashcards section.
+ * flashcards.js — GutenTag Flashcards (a tab inside My Tutor).
  *
  * A per-user flashcard deck harvested from tutor practice: every time a
  * live ChatGPT tutor reply comes back (main.js → GutenFlashcards.onTurn),
  * the misspelled German words from that turn are stored by user + topic
  * (js/db.js → GutenDB.Flashcards). This module then deals them randomly
- * in the Flashcards section and lets the learner mark a word inactive so
- * it drops out of the deck.
+ * in the My Tutor Flashcards tab and lets the learner mark a word
+ * inactive so it drops out of the deck.
  *
  * Exposed as window.GutenFlashcards; wired to the DOM in index.html and
  * driven from main.js (auth changes + tutor turns).
@@ -31,7 +31,7 @@
   const $ = (sel) => document.querySelector(sel);
 
   function init() {
-    sectionEl = $("#flashcards");
+    sectionEl = $("#tutorFlashPane");
     filterEl = $("#flashTopicFilter");
     cardEl = $("#flashCard");
     frontEl = $("#flashCardFront");
@@ -195,7 +195,7 @@
       if (emptyEl) {
         emptyEl.hidden = false;
         emptyEl.textContent =
-          "No flashcards yet — chat with Herr Grün in My Tutor, and every misspelled word lands here for practice.";
+          "No flashcards yet — chat with Herr Grün in the Chat tab, and every misspelled word lands here for practice.";
       }
       if (statusEl) statusEl.textContent = "";
       if (toggleBtn) toggleBtn.hidden = true;
