@@ -539,6 +539,39 @@
     tutorInput.focus();
   });
 
+  /* Repeat Question in English: replays the student's most recent question
+     to the tutor with a GERMAN instruction asking for an English answer.
+     The hidden request is never shown in the chat log nor added to the
+     stored history (topic history or general chat), and the English
+     replay isn't saved either — it is a comprehension aid, not a turn. */
+  $("#tutorRepeat").addEventListener("click", async () => {
+    if (tutorBusy) return;
+    const activeTopic = findTopic(currentTopicId);
+    const prior = activeTopic ? (activeTopic.history || []) : tutorMessages;
+    const lastQuestion = [...prior].reverse().find((m) => m.role === "user");
+    if (!lastQuestion) {
+      tutorInput.focus();
+      return;
+    }
+    tutorBusy = true;
+    const typing = addTypingIndicator(tutorLog);
+    const request =
+      "Ich habe deine letzte Antwort noch nicht ganz verstanden. " +
+      "Bitte beantworte die Frage „" + lastQuestion.text + "“ noch einmal, " +
+      "diesmal vollständig auf Englisch.";
+    const history = prior.map((m) => ({ role: m.role, content: m.text }));
+    const answer = await Tutor.reply(
+      request,
+      tutorLevel,
+      history,
+      activeTopic ? activeTopic.topic : null
+    );
+    typing.remove();
+    addBubble(tutorLog, "🔁 " + answer.text, "bot");
+    tutorBusy = false;
+    tutorInput.focus();
+  });
+
   /* Switching topics opens that topic's (saved) conversation, and points
      the Flashcards tab at the same topic — one shared dropdown above the
      Chat and Flashcards tabs drives both. */

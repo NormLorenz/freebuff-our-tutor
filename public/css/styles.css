@@ -249,6 +249,7 @@ html[data-theme="dark"] .bubble-user { color: #201812; }
 /* Clear-history buttons */
 .chat-input-row .btn-small { flex-shrink: 0; }
 .chip-clear:hover { border-color: var(--red-flag); color: var(--red-flag); }
+.chip-repeat:hover { border-color: var(--primary); color: var(--primary); }
 
 /* ---------- About ---------- */
 .team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 420px)); gap: 1.5rem; justify-content: center; }
@@ -331,9 +332,9 @@ html[data-theme="dark"] .tutor-tab.is-active { color: #201812; }
 }
 .tutor-head { display: flex; justify-content: space-between; align-items: center; }
 .tutor-head h3 { margin: 0; font-size: 1.05rem; }
-.tutor-hint { font-size: 0.85rem; color: var(--text-soft); margin: 0; }  .tutor-topicrow { margin: 0.6rem auto 0; max-width: 640px; }
+.tutor-hint { font-size: 0.85rem; color: var(--text-soft); margin: 0; }  .tutor-topicrow { margin: 0 auto 1.2rem; max-width: 640px; }
   .tutor-topic-select {
-    width: 100%; padding: 0.6rem 0.9rem; border-radius: var(--radius-small);
+    display: block; width: min(560px, 100%); margin: 0 auto; padding: 0.6rem 0.9rem; border-radius: var(--radius-small);
     border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
   }
   .tutor-topic-select:focus {
