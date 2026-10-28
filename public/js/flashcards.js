@@ -214,7 +214,6 @@
     if (statusEl) {
       statusEl.textContent =
         "Card " + (index + 1) + " / " + deck.length +
-        "  •  " + label +
         (card.misses > 1 ? "  •  missed " + card.misses + "×" : "") +
         "  •  click the card to flip it";
     }
@@ -270,11 +269,6 @@
     if (topicId == null) return;
     const all = await DB().Flashcards.list(user, topicId);
     if (!all.length) return;
-    const title = document.createElement("h4");
-    title.textContent =
-      (topicName ? "„" + topicName + "“ — " : "") +
-      "Your words (" + all.filter((c) => c.active).length + " active / " + all.length + ")";
-    WordListEl.appendChild(title);
     const sorted = all.slice().sort((a, b) => (b.misses || 1) - (a.misses || 1));
     for (const card of sorted) {
       const chip = document.createElement("span");
