@@ -282,3 +282,4 @@ Notes:
   stored in `sessionStorage`, which the browser clears on close (see
   `public/js/main.js` → Restore session).
 - ~~Create a new menu item 'Flashcards' and section that is built from mispelled German words and their English equivalent once the tutor ChatGPT call has returned. These words will be stored by user and topic. The flashcards will display words randomly and have the option to mark the word inactive.~~ ✅ Done — see the Flashcards section description above.
+- Consider moving the flashcards under the users/topic tree in the IndexedDB under each topic so that AI can reenforce words that are mispelled. Somehow keep count of the word mispelled and pass those to AI for reenforcement. The flashcards should only display those words for the topic selected. There should be a separate button to clear the history and a separate button to clear the flashcards for the selected topic. The topic dropdown should be located above the Chat and Flashcards tabs.

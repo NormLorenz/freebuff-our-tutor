@@ -418,7 +418,9 @@
   }
 
   /* Load the user's own topic list (seeds legacy profiles on the way) and
-     open the first incomplete topic by default. */
+     open the first incomplete topic by default. Once loaded, point the
+     Flashcards tab at the same selected topic — both tabs are driven by
+     the shared dropdown above them. */
   async function loadUserTopics() {
     if (!DB || !currentUser) return;
     userTopics = (await DB.UserTopics.ensure(currentUser.email)) || [];
@@ -428,6 +430,7 @@
     }
     renderTopicSelect();
     await showTopicView();
+    if (Flash && currentTopicId) Flash.setTopic(currentTopicId);
   }
 
   tutorForm.addEventListener("submit", async (e) => {
@@ -445,7 +448,28 @@
     const history = prior
       .map((m) => ({ role: m.role, content: m.text }));
 
-    const answer = await Tutor.reply(q, tutorLevel, history, activeTopic ? activeTopic.topic : null);
+    /* The student's most-misspelled words for the selected topic (kept on
+       the topic in IndexedDB with a miss count — see js/db.js →
+       Flashcards). Passed to the tutor so it reenforces exactly the words
+       the student keeps getting wrong. Worst offenders first, max 5. */
+    let weakWords = null;
+    if (activeTopic && DB) {
+      try {
+        const cards = await DB.Flashcards.list(currentUser.email, activeTopic.id);
+        weakWords = cards
+          .filter((c) => c.active)
+          .sort((a, b) => (b.misses || 0) - (a.misses || 0))
+          .slice(0, 5);
+      } catch (_) { /* reinforcement is best-effort */ }
+    }
+
+    const answer = await Tutor.reply(
+      q,
+      tutorLevel,
+      history,
+      activeTopic ? activeTopic.topic : null,
+      weakWords && weakWords.length ? weakWords : null
+    );
     typing.remove();
     addBubble(tutorLog, answer.text, "bot");
     const turn = [
@@ -515,10 +539,13 @@
     tutorInput.focus();
   });
 
-  /* Switching topics opens that topic's (saved) conversation */
+  /* Switching topics opens that topic's (saved) conversation, and points
+     the Flashcards tab at the same topic — one shared dropdown above the
+     Chat and Flashcards tabs drives both. */
   topicSelect.addEventListener("change", async () => {
     currentTopicId = topicSelect.value ? Number(topicSelect.value) : null;
     await showTopicView();
+    if (Flash) Flash.setTopic(currentTopicId);
   });
 
   /* ================================================================

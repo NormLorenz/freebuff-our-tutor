@@ -1,15 +1,22 @@
 /**
  * flashcards.js — GutenTag Flashcards (a tab inside My Tutor).
  *
- * A per-user flashcard deck harvested from tutor practice: every time a
+ * A per-user flashcard deck harvested from tutor practice, stored UNDER
+ * EACH TOPIC on the user profile (js/db.js → Flashcards; the words live
+ * in users.topics[].flashcards in IndexedDB, right next to the topic's
+ * chat history). Every misspelled word carries a `misses` count that
+ * grows each time the student misspells it again for that topic.
+ *
+ * The deck shown here is ALWAYS the currently selected topic — the same
+ * shared topic dropdown that drives the Chat tab (main.js tells this
+ * module which topic is selected via GutenFlashcards.setTopic). When a
  * live ChatGPT tutor reply comes back (main.js → GutenFlashcards.onTurn),
- * the misspelled German words from that turn are stored by user + topic
- * (js/db.js → GutenDB.Flashcards). This module then deals them randomly
- * in the My Tutor Flashcards tab and lets the learner mark a word
- * inactive so it drops out of the deck.
+ * the misspelled German words from that turn are counted and stored under
+ * that topic, and the tutor gets the worst-offending words passed into
+ * its prompt for reinforcement (js/tutor.js → GutenTutor.reply).
  *
  * Exposed as window.GutenFlashcards; wired to the DOM in index.html and
- * driven from main.js (auth changes + tutor turns).
+ * driven from main.js (auth changes + topic changes + tutor turns).
  */
 (function () {
   "use strict";
@@ -18,21 +25,19 @@
   const Tutor = () => window.GutenTutor;
 
   /* DOM (cached at init — index.html is loaded before this script) */
-  let sectionEl, filterEl, cardEl, frontEl, backEl, statusEl;
+  let cardEl, frontEl, backEl, statusEl;
   let emptyEl, nextBtn, shuffleBtn, toggleBtn, WordListEl, clearBtn;
 
-  let user = null;          // signed-in user email (or null when signed out)
-  let Topics = [];           // the user's topic list (for the filter)
-  let topicFilter = "all";  // "all" | a topic id
-  let deck = [];            // active cards, shuffled
-  let index = -1;           // position in the (shuffled) deck
-  let flipped = false;      // card currently showing its back?
+  let user = null;           // signed-in user email (or null when signed out)
+  let topicId = null;        // the topic selected in the shared dropdown (null = none)
+  let topicName = "";        // its label, from the dropdown option
+  let deck = [];             // cards of the selected topic, shuffled
+  let index = -1;            // position in the (shuffled) deck
+  let flipped = false;       // card currently showing its back?
 
   const $ = (sel) => document.querySelector(sel);
 
   function init() {
-    sectionEl = $("#tutorFlashPane");
-    filterEl = $("#flashTopicFilter");
     cardEl = $("#flashCard");
     frontEl = $("#flashCardFront");
     backEl = $("#flashCardBack");
@@ -52,26 +57,21 @@
         cardEl.classList.toggle("is-flipped", flipped);
       }
     });
-    filterEl?.addEventListener("change", async () => {
-      topicFilter = filterEl.value || "all";
-      await buildDeck();
-    });
     toggleBtn?.addEventListener("click", () => toggleActive());
-    clearBtn?.addEventListener("click", () => clearAll());
+    clearBtn?.addEventListener("click", () => clearTopic());
 
     setSignedIn(null); // signed-out default until main.js says otherwise
   }
 
   /* -------------------------------------------------------------- */
-  /* Auth state                                                      */
+  /* Auth + topic state                                              */
   /* -------------------------------------------------------------- */
 
   /* Signed out: clear state, collapse the deck. */
   function setSignedIn(currentUser) {
     user = currentUser ? currentUser.email : null;
-    Topics = [];
-    topicFilter = "all";
-    if (filterEl) filterEl.innerHTML = '<option value="all">All topics</option>';
+    topicId = null;
+    topicName = "";
     deck = [];
     index = -1;
     if (WordListEl) WordListEl.innerHTML = "";
@@ -87,33 +87,26 @@
     }
   }
 
-  /* Signed in (called on every auth change): refresh the deck. */
+  /* main.js calls this whenever the shared My Tutor topic dropdown
+   * changes (and after the user's topics have loaded): this deck only
+   * ever shows the words stored under the SELECTED topic.               */
+  function setTopic(selected) {
+    if (!user) return;
+    topicId = selected == null || selected === "" ? null : Number(selected);
+    topicName = "";
+    if (topicId != null) {
+      const opt = $("#tutorTopicSelect")?.querySelector(
+        'option[value="' + topicId + '"]'
+      );
+      if (opt) topicName = opt.textContent.replace(/^✓\s*/, "");
+    }
+    buildDeck();
+  }
+
+  /* Signed in (called on every auth change): refresh the current topic's deck. */
   async function refresh() {
     if (!user || !DB()) return;
-    const topics = await DB().UserTopics.list(user);
-    Topics = topics || [];
-    renderTopicFilter();
-    await buildDeck();
-  }
-
-  function renderTopicFilter() {
-    if (!filterEl) return;
-    filterEl.innerHTML = "";
-    filterEl.append(new Option("All topics (" + Topics.length + ")", "all"));
-    for (const t of Topics) {
-      const opt = new Option(t.topic, String(t.id));
-      opt.selected = filterValueMatches(t.id);
-      filterEl.append(opt);
-    }
-    /* Keep "all" available even when a topic is selected (option order:
-       filterEl.value falls back to the first option if unset). */
-    if (filterEl.value !== (topicFilter === "all" ? "all" : String(topicFilter))) {
-      filterEl.value = topicFilter === "all" ? "all" : String(topicFilter);
-    }
-  }
-
-  function filterValueMatches(topicId) {
-    return topicFilter !== "all" && Number(topicFilter) === Number(topicId);
+    await Deck();
   }
 
   /* -------------------------------------------------------------- */
@@ -122,14 +115,16 @@
 
   /* main.js calls this after every tutor turn:
    *   email     — signed-in user
-   *   topicId   — the practiced topic (null for topicless chat; skipped)
-   *   topicName — the topic's label for display
+   *   practicedTopicId — the practiced topic (null for topicless chat;
+   *               skipped — flashcards only exist under topics)
+   *   topicName — the topic's label
    *   answer    — { text, source } from GutenTutor.reply
    * Words are harvested only when the reply came from live ChatGPT
-   * ("chatgpt") — the practice-mode fallback has nothing to correct.    */
-  async function onTurn(email, topicId, topicName, answer) {
+   * ("chatgpt") — the practice-mode fallback has nothing to correct.
+   * Each stored card keeps a `misses` count; a repeat miss bumps it.    */
+  async function onTurn(email, practicedTopicId, topicName, answer) {
     if (!email || !DB() || !Tutor()) return;
-    if (!topicId || !answer || answer.source !== "chatgpt") return;
+    if (!practicedTopicId || !answer || answer.source !== "chatgpt") return;
 
     try {
       const words = await Tutor().extractMisspellings(
@@ -138,9 +133,13 @@
         answer.text
       );
       if (!words.length) return;
-      const added = await DB().Flashcards.addWords(email, topicId, topicName, words);
-      if (added > 0) {
-        if (user === email) await refresh();
+      await DB().Flashcards.addWords(email, practicedTopicId, words);
+      /* Miss counts grow even when the card already existed, so refresh
+       * the visible deck whenever the practiced topic is the one
+       * currently selected — new words and bumped counts show up live.   */
+      if (user === email && practicedTopicId != null &&
+          Number(practicedTopicId) === Number(topicId)) {
+        await buildDeck();
       }
     } catch (err) {
       console.warn("[flashcards] harvesting skipped:", err?.message || err);
@@ -159,15 +158,22 @@
     return arr;
   }
 
-  /* Rebuild the random deck from storage for the current filter.
-   * Active cards only — inactive ones are out until re-activated.      */
+  /* Rebuild the random deck from storage for the selected topic.
+   * Active cards only — inactive ones are out until re-activated.
+   * When no topic is selected, the deck is empty by definition, because
+   * flashcards live under topics now.                                   */
   async function buildDeck() {
     if (!user || !DB()) return;
-    const cards = await DB().Flashcards.list(user, {
-      topicId: topicFilter === "all" ? null : topicFilter,
-      activeOnly: true,
-    });
-    deck = shuffleInPlace(cards.slice());
+    if (topicId == null) {
+      deck = [];
+      index = -1;
+      flipped = false;
+      render();
+      renderWordList();
+      return;
+    }
+    const cards = await DB().Flashcards.list(user, topicId);
+    deck = shuffleInPlace(cards.filter((c) => c.active));
     index = deck.length ? 0 : -1;
     flipped = false;
     render();
@@ -191,23 +197,26 @@
     const card = currentCard();
     cardEl.hidden = !card;
     cardEl.classList.toggle("is-flipped", flipped);
+    const label = topicName || (topicId != null ? "this topic" : "");
     if (!card) {
       if (emptyEl) {
         emptyEl.hidden = false;
-        emptyEl.textContent =
-          "No flashcards yet — chat with Herr Grün in the Chat tab, and every misspelled word lands here for practice.";
+        emptyEl.textContent = topicId == null
+          ? "Choose a topic above (the same dropdown that drives the Chat tab) to see its flashcards. 🥨"
+          : "No flashcards for „" + label + "“ yet — chat with Herr Grün in the Chat tab while practicing this topic, and every misspelled word lands here for practice.";
       }
       if (statusEl) statusEl.textContent = "";
       if (toggleBtn) toggleBtn.hidden = true;
-      if (clearBtn) clearBtn.hidden = !user;
+      if (clearBtn) clearBtn.hidden = !(user && topicId != null);
       return;
     }
     if (emptyEl) emptyEl.hidden = true;
     if (statusEl) {
-      const topicLabel = card.topic ? card.topic : "General chat";
       statusEl.textContent =
         "Card " + (index + 1) + " / " + deck.length +
-        "  •  " + topicLabel + "  •  click the card to flip it";
+        "  •  " + label +
+        (card.misses > 1 ? "  •  missed " + card.misses + "×" : "") +
+        "  •  click the card to flip it";
     }
     if (frontEl) frontEl.textContent = card.german;
     if (backEl) {
@@ -217,24 +226,26 @@
       if (card.wrong && card.wrong.toLowerCase() !== String(card.german).toLowerCase()) {
         const wrongLine = document.createElement("span");
         wrongLine.className = "flash-wrong";
-        wrongLine.textContent = "You wrote: " + card.wrong;
+        wrongLine.textContent =
+          "You wrote: " + card.wrong +
+          (card.misses > 1 ? " (" + card.misses + " misses)" : "");
         backEl.appendChild(wrongLine);
       }
     }
     if (toggleBtn) {
       toggleBtn.hidden = false;
       toggleBtn.textContent = "Mark Inactive";
-      toggleBtn.title = "Drop „" + card.german + "“ out of the practice deck";
+      toggleBtn.title = "Drop „" + card.german + "“ out of this topic's practice deck";
     }
     if (clearBtn) clearBtn.hidden = false;
   }
 
-  /* Mark the current card inactive (main requirement): it leaves the
-   * random deck; it can be re-activated from the word list below.      */
+  /* Mark the current card inactive: it leaves the topic's deck; it can
+   * be re-activated from the word list below.                           */
   async function toggleActive() {
     const card = currentCard();
-    if (!card || !user || !DB()) return;
-    await DB().Flashcards.setActive(user, card.id, false);
+    if (!card || !user || !DB() || topicId == null) return;
+    await DB().Flashcards.setActive(user, topicId, card.german, false);
     cardEl.classList.remove("is-flipped");
     flipped = false;
     deck.splice(index, 1); // out of the deck right away
@@ -244,48 +255,54 @@
   }
 
   /* Re-activate an inactive card from the word list. */
-  async function activateCard(id) {
-    if (!user || !DB()) return;
-    await DB().Flashcards.setActive(user, id, true);
+  async function activateCard(german) {
+    if (!user || !DB() || topicId == null) return;
+    await DB().Flashcards.setActive(user, topicId, german, true);
     await buildDeck();
   }
 
-  /* Small list of every card in the current filter: active ones are in
-   * the deck (click → deal that card), inactive ones have an Undo.     */
+  /* List of every card under the selected topic, worst offenders first:
+   * active ones are in the deck (click → deal that card), inactive ones
+   * have an Undo. The miss count is shown on each chip.                 */
   async function renderWordList() {
     if (!WordListEl || !user || !DB()) return;
-    const all = await DB().Flashcards.list(user, {
-      topicId: topicFilter === "all" ? null : topicFilter,
-    });
     WordListEl.innerHTML = "";
+    if (topicId == null) return;
+    const all = await DB().Flashcards.list(user, topicId);
     if (!all.length) return;
     const title = document.createElement("h4");
     title.textContent =
+      (topicName ? "„" + topicName + "“ — " : "") +
       "Your words (" + all.filter((c) => c.active).length + " active / " + all.length + ")";
     WordListEl.appendChild(title);
-    for (const card of all) {
+    const sorted = all.slice().sort((a, b) => (b.misses || 1) - (a.misses || 1));
+    for (const card of sorted) {
       const chip = document.createElement("span");
       chip.className = "chip flash-chip" + (card.active ? "" : " flash-chip-inactive");
+      const count = card.misses > 1 ? " ×" + card.misses : "";
       if (card.active) {
-        chip.textContent = card.german;
-        chip.title = card.english + (card.wrong ? " (wrote: " + card.wrong + ")" : "");
+        chip.textContent = card.german + count;
+        chip.title =
+          card.english +
+          (card.wrong ? " (wrote: " + card.wrong + ")" : "") +
+          (card.misses > 1 ? " — misspelled " + card.misses + " times" : "");
         chip.addEventListener("click", () => {
           // deal this card next: rebuild deck from storage first
-          activateCardThenShow(card.id);
+          activateCardThenShow(card.german);
         });
       } else {
-        chip.textContent = card.german + " ⛔";
+        chip.textContent = card.german + count + " ⛔";
         chip.title = "Inactive — click to put it back in the deck";
-        chip.addEventListener("click", () => activateCard(card.id));
+        chip.addEventListener("click", () => activateCard(card.german));
       }
       WordListEl.appendChild(chip);
     }
   }
 
   /* From the word list: make sure the card is in the deck, then show it. */
-  async function activateCardThenShow(id) {
-    await activateCard(id);
-    const at = deck.findIndex((c) => c.id === id);
+  async function activateCardThenShow(german) {
+    await activateCard(german);
+    const at = deck.findIndex((c) => c.german === german);
     if (at >= 0) {
       index = at;
       flipped = false;
@@ -293,11 +310,18 @@
     }
   }
 
-  /* Wipe the whole per-user collection (optionally one topic). */
-  async function clearAll() {
-    if (!user || !DB()) return;
-    await DB().Flashcards.clear(user, topicFilter === "all" ? null : topicFilter);
+  /* Wipe the flashcards stored under the SELECTED topic (the dedicated
+   * Clear button sits in the Flashcards tab, separate from the Chat
+   * tab's Clear button which only wipes the topic's chat history).      */
+  async function clearTopic() {
+    if (!user || !DB() || topicId == null) return;
+    const n = await DB().Flashcards.clear(user, topicId);
     await buildDeck();
+    if (statusEl) {
+      statusEl.textContent =
+        "Cleared " + n + " flashcard" + (n === 1 ? "" : "s") +
+        (topicName ? " for „" + topicName + "“" : "") + ".";
+    }
   }
 
   /* -------------------------------------------------------------- */
@@ -306,6 +330,7 @@
     init,
     onTurn,
     setSignedIn,
+    setTopic,
     refresh,
   };
 })();

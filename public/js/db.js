@@ -7,8 +7,14 @@
  *                  tutorLevel, topics[], createdAt }; plan:
  *                  beginner/intermediate/advanced. `topics` is a copy of the
  *                  plan's range pack made on creation: each entry is
- *                  { id, topic, visited, history[] } and history keeps the
- *                  tutor messages practiced on that topic.
+ *                  { id, topic, visited, history[], flashcards[] } and
+ *                  history keeps the tutor messages practiced on that topic
+ *                  while flashcards holds the misspelled words harvested
+ *                  from that topic, each with a misses count.
+ *
+ *   (flashcards stopped being its own table in v6 — harvested words now
+ *   live on the user's topic tree, under each topic, so they can be
+ *   counted and reinforced by the tutor per topic.)
  *   subscribers  — monthly newsletter signups { email, subscribedAt }
  *   chatSessions — service-bot conversations { key, messages[], updatedAt }
  *   settings     — app preferences { key, value } (e.g. theme)
@@ -104,13 +110,59 @@ if (db) {
     .stores({
       flashcards: "++id, email, topicId, active",
     });
+  /* v6 — flashcards move under the user's topic tree: each topic entry on
+   * the user profile gains a `flashcards[]` array (indexable nothing —
+   * cards are read via the user record itself), so every word is stored
+   * with the topic it was missed on, together with a `misses` count that
+   * grows every time the student misspells it again. The standalone
+   * flashcards table is dropped and its rows are migrated onto the user
+   * profiles in the upgrade transaction (which still sees v5 tables). */
+  db.version(6)
+    .stores({
+      flashcards: null,
+    })
+    .upgrade(async (tx) => {
+      let rows = [];
+      try {
+        rows = await tx.table("flashcards").toArray();
+      } catch (err) {
+        // Table already gone (upgrade retried / partial) — nothing to move.
+        console.warn("[db] v6 upgrade: flashcards table unreadable", err);
+      }
+      if (!rows.length) return;
+      const users = await tx.table("users").toArray();
+      for (const user of users) {
+        const mine = rows.filter((r) => r.email === user.email);
+        if (!mine.length || !Array.isArray(user.topics)) continue;
+        const topics = user.topics.map((t) => {
+          const old = mine.filter((r) => Number(r.topicId) === Number(t.id));
+          if (!old.length) return t;
+          const cards = Array.isArray(t.flashcards) ? t.flashcards.slice() : [];
+          const keys = new Set(cards.map((c) => String(c.german).toLowerCase()));
+          for (const r of old) {
+            if (keys.has(String(r.german).toLowerCase())) continue;
+            cards.push({
+              german: r.german,
+              wrong: r.wrong || "",
+              english: r.english,
+              misses: 1,
+              active: r.active !== false,
+              createdAt: r.createdAt || Date.now(),
+            });
+            keys.add(String(r.german).toLowerCase());
+          }
+          return { ...t, flashcards: cards };
+        });
+        await tx.table("users").put({ ...user, topics });
+      }
+    });
 }
 
 /* ------------------------------------------------------------------ */
 /* In-memory fallback (when IndexedDB/Dexie is unavailable)            */
 /* ------------------------------------------------------------------ */
 function makeMemoryStore() {
-  const tables = { users: [], subscribers: [], chatSessions: [], settings: [], flashcards: [] };
+  const tables = { users: [], subscribers: [], chatSessions: [], settings: [] };
   let seq = 1;
   const norm = (table) => (tables[table] ??= []);
   return {
@@ -290,10 +342,15 @@ const UserTopics = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Flashcards — misspelled German words harvested from tutor turns      */
-/* One row per { user, topic, german word }: the wrong form the student
-/* wrote, the correct form, and its English meaning. `active` false
-counts a card out of the random practice deck until re-activated.     */
+/* Flashcards — misspelled German words harvested from tutor turns,     */
+/* stored UNDER EACH TOPIC on the user profile (users.topics[].flashcards).
+/* One card per { topic, german word }: the wrong form the student
+/* wrote, the correct form, its English meaning, and `misses` — a count
+/* of how many times the student has misspelled that word while
+/* practicing the topic. Repeated misses increment the count (no new
+/* row), so the tutor and the Flashcards tab can reinforce the
+/* worst-offending words first. `active` false counts a card out of the
+/* random practice deck until re-activated.                            */
 const Flashcards = {
   /* Normalize a German word for de-dup comparisons (case, ß, umlauts). */
   _norm(word) {
@@ -306,75 +363,92 @@ const Flashcards = {
       .trim();
   },
 
-  /* Store harvested words { wrong, correct, english }[] for a user's
-   * topic. Skips empty pairs and ones already saved (same user + topic
-   * + correct word). Returns the number of NEW cards added.             */
-  async addWords(email, topicId, topic, words) {
+  /* Store harvested words { wrong, correct, english }[] as flashcards
+   * on the selected topic under the user profile. A word already on the
+   * topic just gets its `misses` count bumped (and its recorded wrong
+   * form refreshed) instead of duplicating a card. Returns the number
+   * of NEW cards added.                                                */
+  async addWords(email, topicId, words) {
     if (!email || !Array.isArray(words)) return 0;
-    const existing = await store.where("flashcards", "email", email);
-    const topicRows = existing.filter(
-      (r) => Number(r.topicId) === Number(topicId)
-    );
-    const seen = new Set(topicRows.map((r) => Flashcards._norm(r.german)));
+    const user = await Users.findByEmail(email);
+    if (!user || !Array.isArray(user.topics)) return 0;
     let added = 0;
-    for (const w of words) {
-      const german = String(w.correct || w.german || "").trim();
-      const english = String(w.english || "").trim();
-      if (!german || !english) continue;
-      const key = Flashcards._norm(german);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      await store.add("flashcards", {
-        email,
-        topicId: Number(topicId),
-        topic: String(topic || ""),
-        german,
-        wrong: String(w.wrong || w.misspelled || "").trim(),
-        english,
-        active: true,
-        createdAt: Date.now(),
-      });
-      added++;
-    }
+    const topics = user.topics.map((t) => {
+      if (Number(t.id) !== Number(topicId)) return t;
+      const cards = Array.isArray(t.flashcards) ? t.flashcards.slice() : [];
+      for (const w of words) {
+        const german = String(w.correct || w.german || "").trim();
+        const english = String(w.english || "").trim();
+        if (!german || !english) continue;
+        const key = Flashcards._norm(german);
+        const existing = cards.find((c) => Flashcards._norm(c.german) === key);
+        if (existing) {
+          existing.misses = (existing.misses || 1) + 1;
+          existing.wrong = String(w.wrong || w.misspelled || existing.wrong || "").trim();
+        } else {
+          cards.push({
+            german,
+            wrong: String(w.wrong || w.misspelled || "").trim(),
+            english,
+            misses: 1,
+            active: true,
+            createdAt: Date.now(),
+          });
+          added++;
+        }
+      }
+      return { ...t, flashcards: cards };
+    });
+    await store.put("users", { ...user, topics });
     return added;
   },
 
-  /* The user's flashcards, optionally scoped to one topic or filtered to
-   * active ones for the practice deck. */
-  async list(email, { topicId = null, activeOnly = false } = {}) {
+  /* The flashcards under one topic of the user's topic tree. A topicId
+   * is required — cards always live on the selected topic now.         */
+  async list(email, topicId) {
     if (!email) return [];
-    const rows = await store.where("flashcards", "email", email);
-    return rows.filter(
-      (r) =>
-        (topicId == null || Number(r.topicId) === Number(topicId)) &&
-        (!activeOnly || r.active)
+    const user = await Users.findByEmail(email);
+    const topic = (user?.topics || []).find(
+      (t) => Number(t.id) === Number(topicId)
     );
+    return Array.isArray(topic?.flashcards) ? topic.flashcards.slice() : [];
   },
 
-  /* Count helper for the section header (active vs total). */
-  async counts(email) {
-    const rows = await Flashcards.list(email);
+  /* Count helper for the section header (all cards on the topic). */
+  async counts(email, topicId) {
+    const rows = await Flashcards.list(email, topicId);
     return { total: rows.length, active: rows.filter((r) => r.active).length };
   },
 
   /* Mark a card inactive (out of the deck) or active again. */
-  async setActive(email, id, active) {
-    const rows = await store.where("flashcards", "email", email);
-    const row = rows.find((r) => r.id === id);
-    if (!row) return null;
-    await store.put("flashcards", { ...row, active: !!active });
-    return { ...row, active: !!active };
+  async setActive(email, topicId, german, active) {
+    const user = await Users.findByEmail(email);
+    if (!user || !Array.isArray(user.topics)) return null;
+    const key = Flashcards._norm(german);
+    const topics = user.topics.map((t) => {
+      if (Number(t.id) !== Number(topicId)) return t;
+      const cards = (Array.isArray(t.flashcards) ? t.flashcards : []).map((c) =>
+        Flashcards._norm(c.german) === key ? { ...c, active: !!active } : c
+      );
+      return { ...t, flashcards: cards };
+    });
+    await store.put("users", { ...user, topics });
+    return { german, active: !!active };
   },
 
-  /* Remove every stored card for the user (optionally one topic only). */
-  async clear(email, topicId = null) {
-    const rows = await Flashcards.list(email);
+  /* Remove the flashcards stored under one topic of the user's topic
+   * tree. Returns how many cards were cleared.                         */
+  async clear(email, topicId) {
+    if (!email) return 0;
+    const user = await Users.findByEmail(email);
+    if (!user || !Array.isArray(user.topics)) return 0;
     let n = 0;
-    for (const r of rows) {
-      if (topicId != null && Number(r.topicId) !== Number(topicId)) continue;
-      await store.delete("flashcards", r.id);
-      n++;
-    }
+    const topics = user.topics.map((t) => {
+      if (Number(t.id) !== Number(topicId)) return t;
+      n = (Array.isArray(t.flashcards) ? t.flashcards : []).length;
+      return { ...t, flashcards: [] };
+    });
+    await store.put("users", { ...user, topics });
     return n;
   },
 };

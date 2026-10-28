@@ -252,6 +252,13 @@
         <h2>My Tutor</h2>
         <p>Your personal AI German tutor, available around the clock. <em>Übung macht den Meister!</em></p>
       </div>
+      <div class="tutor-topicrow">
+        <label class="visually-hidden" for="tutorTopicSelect">Choose a practice topic</label>
+        <select id="tutorTopicSelect" class="tutor-topic-select" aria-label="Choose a practice topic — shared by the Chat and Flashcards tabs">
+          <option value="">— Wähle ein Thema (choose a topic) —</option>
+        </select>
+        <p class="tutor-topic-hint">Topics come from your plan's lesson pack; each one keeps its own chat history and flashcards.</p>
+      </div>
       <div class="tutor-tabs" role="tablist" aria-label="My Tutor tools">
         <button class="tutor-tab is-active" id="tutorTabChat" role="tab" aria-selected="true" aria-controls="tutorChatPane" data-tutor-tab="chat">Chat 🎙️</button>
         <button class="tutor-tab" id="tutorTabFlash" role="tab" aria-selected="false" aria-controls="tutorFlashPane" data-tutor-tab="flashcards">Flashcards 🃏</button>
@@ -262,13 +269,6 @@
           <h3>AI German Tutor</h3>
         </div>
         <p class="tutor-hint" id="tutorHint">Write in German (or English) and your tutor will answer in German level <strong id="tutorLevelLabel">A1</strong> — the level your lesson plan sets — with gentle corrections and English notes.</p>
-        <div class="tutor-topicrow">
-          <label class="visually-hidden" for="tutorTopicSelect">Choose a practice topic</label>
-          <select id="tutorTopicSelect" class="tutor-topic-select" aria-label="Choose a practice topic">
-            <option value="">— Wähle ein Thema (choose a topic) —</option>
-          </select>
-          <p class="tutor-topic-hint">Topics come from your plan's lesson pack; each one keeps its own chat history.</p>
-        </div>
         <div class="chat-log" id="tutorLog" aria-live="polite"></div>
         <div class="tutor-quickrow" aria-label="Buttons to insert German special characters into the composer">
           <button type="button" class="chip chip-insert" data-insert="Ä" aria-label="Insert Ä" title="Insert Ä">Ä</button>
@@ -278,7 +278,7 @@
           <button type="button" class="chip chip-insert" data-insert="Ü" aria-label="Insert Ü" title="Insert Ü">Ü</button>
           <button type="button" class="chip chip-insert" data-insert="ü" aria-label="Insert ü" title="Insert ü">ü</button>
           <button type="button" class="chip chip-insert" data-insert="ß" aria-label="Insert ß (Eszett)" title="Insert ß (Eszett)">ß</button>
-          <button type="button" class="chip chip-clear" id="tutorClear" aria-label="Clear tutor chat history" title="Clear tutor chat and start fresh">🗑️ Clear</button>
+          <button type="button" class="chip chip-clear" id="tutorClear" aria-label="Clear tutor chat history" title="Clear the chat history of the selected topic only">🗑️ Clear History</button>
         </div>
         <form class="chat-input-row" id="tutorForm">
           <label class="visually-hidden" for="tutorInput">Message to the tutor</label>
@@ -290,13 +290,9 @@
       <div class="tutor-pane" id="tutorFlashPane" role="tabpanel" aria-labelledby="tutorTabFlash" hidden>
         <div class="flash-panel card" aria-label="Flashcard practice">
           <div class="flash-controls">
-            <label class="visually-hidden" for="flashTopicFilter">Filter by topic</label>
-            <select id="flashTopicFilter" class="tutor-topic-select" aria-label="Filter flashcards by topic">
-              <option value="all">All topics</option>
-            </select>
             <button type="button" class="btn btn-primary btn-small" id="flashNext" title="Deal the next random card">Next Card 🔄</button>
             <button type="button" class="btn btn-outline btn-small" id="flashShuffle" title="Shuffle the deck">Shuffle 🔀</button>
-            <button type="button" class="btn btn-ghost btn-small" id="flashClear" aria-label="Clear all flashcards" title="Delete all stored words for your account">🗑️ Clear</button>
+            <button type="button" class="btn btn-ghost btn-small" id="flashClear" aria-label="Clear flashcards for the selected topic" title="Delete only the flashcards stored for the topic selected above">🗑️ Clear Flashcards</button>
           </div>
           <p class="flash-status form-msg ok" id="flashStatus" role="status" aria-live="polite"></p>
           <p class="flash-empty" id="flashEmpty" hidden>Sign in to collect flashcards from your tutor practice. 🥨</p>

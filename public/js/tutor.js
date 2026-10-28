@@ -20,15 +20,29 @@
   const API_URL = "https://api.openai.com/v1/chat/completions"; // dev override only
   const PROXY_URL = "/api/tutor";
 
-  function systemPrompt(level, topic) {
+  /* weakWords — optional list of the student's most-misspelled words for
+   * the currently selected topic, [{ german, english, misses }, …] with
+   * miss counts, read from the user's topic tree (see js/db.js →
+   * Flashcards). The tutor gets them in the system prompt so it can
+   * reenforce exactly the words the student keeps getting wrong.        */
+  function systemPrompt(level, topic, weakWords) {
     /* When a practice topic is selected, steer the roleplay toward it. */
     const topicLine = topic
       ? `\n\nThe current practice topic is "${topic}". Steer the conversation
 and vocabulary toward that topic (gently — it is a prompt, not a script).`
       : "";
+    /* Reinforcement: bring up the misspelled words (worst first) and give
+       the student a natural chance to use them correctly this turn.      */
+    const weakLine = Array.isArray(weakWords) && weakWords.length
+      ? `\n\nWhile practicing this topic, the student has misspelled these German words
+(count of times misspelled): ${weakWords
+          .map((w) => `"${w.german}" (${w.misses || 1}×)`)
+          .join(", ")}. Work the most-misspelled ones into your reply naturally
+and/or gently invite the student to try them again, spelled correctly.`
+      : "";
     return `
 You are "Herr Grün", a warm, patient, encouraging German tutor at GutenTag,
-a friendly German school in Berlin. The student's CEFR level is ${level}.${topicLine}
+a friendly German school in Berlin. The student's CEFR level is ${level}.${topicLine}${weakLine}
 
 Rules:
 - Reply primarily in simple ${level}-level German, correct and natural.
@@ -73,10 +87,10 @@ Rules:
     return data.reply;
   }
 
-  async function askChatGPT(userMessage, level, history = [], topic = null) {
+  async function askChatGPT(userMessage, level, history = [], topic = null, weakWords = null) {
     const payload = {
       messages: [
-        { role: "system", content: systemPrompt(level, topic) },
+        { role: "system", content: systemPrompt(level, topic, weakWords) },
         ...history.slice(-10),
         { role: "user", content: userMessage },
       ],
@@ -230,9 +244,9 @@ Rules:
 
   /* ---------------- Public API ---------------- */
 
-  async function reply(userMessage, level = "A1", history = [], topic = null) {
+  async function reply(userMessage, level = "A1", history = [], topic = null, weakWords = null) {
     try {
-      const ai = await askChatGPT(userMessage, level, history, topic);
+      const ai = await askChatGPT(userMessage, level, history, topic, weakWords);
       if (ai) return { text: ai, source: "chatgpt" };
       return { text: await offlineReply(userMessage, history.length, level, topic), source: "practice" };
     } catch (err) {
