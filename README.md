@@ -13,18 +13,23 @@ A single-page marketing + learning site with three AI-powered pieces:
    clear-history support.
 2. **Herr Grün, the AI German tutor** (My Tutor section) — a members-only chat
    that writes German at your CEFR level (A1–C1) with gentle corrections and
-   English notes. You reach it via the "My Tutor" nav link that appears once
-   you are signed in.
-3. **Flashcards** — every time a live ChatGPT tutor reply comes back, the
-   misspelled German words from your message are extracted and stored per user
-   and per topic. The Flashcards section deals them randomly in a flip-card
-   deck and lets you mark a word inactive so it drops out of the deck until
-   you put it back.
+   English notes, plus a 🔁 **Repeat Question in English** button. You reach it
+   via the "My Tutor" nav link that appears once you are signed in.
+3. **Flashcards** — a tab inside My Tutor, driven by the shared topic dropdown
+   that sits above the Chat and Flashcards tabs. Every live ChatGPT tutor
+   reply harvests the misspelled German words from your message and stores
+   them under that topic on your user record, each with a `misses` count that
+   grows every time you misspell the same word again. The deck deals the
+   selected topic's active words randomly, and the tutor gets your five
+   worst-offender words passed into its prompt so answers reenforce exactly
+   the words you keep getting wrong. You can mark a word inactive so it
+   drops out of the deck until you put it back.
 4. **Local accounts** — sign up (name, email, password, lesson level:
    Beginner A1–A2 / Intermediate A2–B1 / Advanced B1–C1) and sign in via the
    header button (or the plan CTAs in the Lessons section). Once signed in:
    the header button turns into **Sign Out** with a "Hi, *name*!" greeting,
-   the **My Tutor** and **Flashcards** nav links and sections appear, and the
+   the **My Tutor** nav link (Flashcards lives inside it as a tab) appears,
+   and the
    **hero swaps to a member view** — a personalized "Willkommen zurück,"
    greeting plus *Mein Tutor 🎙️* and *Meine Flashcards 🃏* buttons instead of
    the marketing pitch. The session lives in `sessionStorage`, so **closing
@@ -54,15 +59,19 @@ and graceful fallbacks when offline or without an OpenAI key.
 - **AI German tutor** (`public/js/tutor.js` + Vercel function
   `api/tutor.js`) — the "My Tutor" section that chats in German at your
   CEFR level (A1–C1) with gentle corrections and English notes. Also
-  harvests misspellings from each tutor turn for the flashcard deck, and
-  falls back to a built-in offline practice mode without a key.
+  harvests misspellings from each tutor turn for the flashcard deck,
+  receives your most-misspelled words for the topic in its system prompt
+  (reinforcement), and falls back to a built-in offline practice mode
+  without a key.
 - **Local accounts, topics & flashcards** (`public/js/db.js`) — Dexie/IndexedDB
   storage of users (with per-user topic packs copied from the plan at
-  signup and per-topic chat history), flashcards, newsletter subscribers,
-  chat sessions, and preferences, with clear-history buttons for both chat
-  widgets. In-memory fallback when IndexedDB is unavailable.
-- **Flashcards UI** (`public/js/flashcards.js`) — random flip-card deck,
-  topic filter, active/inactive word chips, and a per-user clear button.
+  signup; each topic keeps its own chat history and flashcard deck with
+  miss counts), newsletter subscribers, chat sessions, and preferences.
+  In-memory fallback when IndexedDB is unavailable.
+- **Flashcards UI** (`public/js/flashcards.js`) — random flip-card deck
+  scoped to the topic selected in the shared My Tutor dropdown, miss-count
+  badges on cards and word chips (worst offenders first), Mark Inactive,
+  and a per-topic Clear Flashcards button.
 - **Topic packs** (`public/js/topics.js` + `public/data/topics/*.json`) —
   CEFR-themed practice topics per range (A1–A2, A2–B1, B1–C1).
 - **Wire-up** (`public/js/main.js`) — auth modal, session restore, theme
@@ -175,15 +184,20 @@ vercel --prod                   # production deploy with env vars attached
   your user record) and displays it as the plan's CEFR range — A1–A2
   (Beginner), A2–B1 (Intermediate), or B1–C1 (Advanced). Write in German or
   English; special characters (Ä ä Ö ö Ü ü ß) have insert buttons near the
-  composer. Per-topic histories keep ✓ progress marks and can be cleared
-  with 🗑️.
-- **Flashcards** — appears in the nav (and the hero) once you're signed in.
-  Every live tutor ChatGPT reply harvests the misspelled German words from
-  your message (stored per user + topic). Deal random cards (Next Card /
-  Shuffle), click the card to flip the German word to its English meaning,
-  press **Mark Inactive** to take a word out of the deck (click its ⛔ chip
-  to put it back), filter the deck by topic, or clear your whole collection
-  with 🗑️.
+  composer. A topic dropdown sits above the Chat and Flashcards tabs and
+  drives both panes. 🗑️ **Clear History** wipes only the selected topic's
+  chat. 🔁 **Repeat Question in English** replays your last question behind
+  the scenes — asking in German, answering in English — and neither the
+  request nor the answer is committed to the stored history.
+- **Flashcards** — the second tab inside My Tutor, sharing the topic
+  dropdown above the tabs; the deck is always the selected topic. Every
+  live tutor ChatGPT reply harvests the misspelled German words from your
+  message (stored under the topic with a miss count that grows on every
+  repeat miss). Deal random cards (Next Card / Shuffle), click the card to
+  flip the German word to its English meaning and the wrong form you
+  wrote, press **Mark Inactive** to take a word out of the deck (click its
+  ⛔ chip to put it back), or empty the topic's deck with 🗑️ **Clear
+  Flashcards** (keeping the topic's chat history intact).
 - **Sign out** — the header's "Sign Out" button (or the button inside the
   auth modal) ends the session immediately; closing the browser does it
   automatically.
@@ -200,21 +214,24 @@ vercel --prod                   # production deploy with env vars attached
 
 ### IndexedDB schema
 
-The database (`GutenTagDB`, Dexie v5 after live migrations v1–v5) holds five
+The database (`GutenTagDB`, Dexie v6 after live migrations v1–v6) holds four
 tables, all stored in the visitor's browser:
 
 | Table (v5 index schema) | Stores | Key fields |
 | --- | --- | --- |
-| `users` (`++id, &email, name, plan, tutorLevel, createdAt`) | Signed-up students | `plan` = beginner/intermediate/advanced; `topics[]` = per-user copy of that plan's topic pack, each `{ id, topic, visited, history[] }` with the tutor messages practiced; `tutorLevel` seeds the tutor |
+| `users` (`++id, &email, name, plan, tutorLevel, createdAt`) | Signed-up students | `plan` = beginner/intermediate/advanced; `topics[]` = per-user copy of that plan's topic pack, each `{ id, topic, visited, history[], flashcards[] }` — `history[]` keeps the tutor messages practiced and `flashcards[]` the misspelled words harvested there, each `{ german, wrong, english, misses, active, createdAt }`; `tutorLevel` seeds the tutor |
 | `subscribers` (`++id, &email, subscribedAt`) | Newsletter signups | one row per email (unique) |
 | `chatSessions` (`++id, &key, updatedAt`) | Service-bot (Klaus) conversations | `key` unique per visitor, `messages[]` is the transcript |
 | `settings` (`&key`) | App preferences (e.g. theme) | `key`/`value` pairs |
-| `flashcards` (`++id, email, topicId, active`) | Misspelled German words harvested from tutor replies | one row per word per user per topic `{ email, topicId, topic, german, english, active, createdAt }` |
 
 The `tutorSessions` table existed in v1–v3 and was deleted in v4 — topic
 conversations now live on the user's topic list, and the no-topic chat is
-session-scoped. When Dexie/IndexedDB is unavailable, everything above falls
-back to an in-memory store for that page visit.
+session-scoped. The standalone `flashcards` table existed through v5 and
+was deleted in v6 — harvested words now live under each topic on the user
+record (with a `misses` count), so the tutor can reinforce them per topic;
+the v6 upgrade migrates existing rows onto each user's topics. When
+Dexie/IndexedDB is unavailable, everything above falls back to an in-memory
+store for that page visit.
 
 ## Project structure
 ```
@@ -282,4 +299,4 @@ Notes:
   stored in `sessionStorage`, which the browser clears on close (see
   `public/js/main.js` → Restore session).
 - ~~Create a new menu item 'Flashcards' and section that is built from mispelled German words and their English equivalent once the tutor ChatGPT call has returned. These words will be stored by user and topic. The flashcards will display words randomly and have the option to mark the word inactive.~~ ✅ Done — see the Flashcards section description above.
-- Consider moving the flashcards under the users/topic tree in the IndexedDB under each topic so that AI can reenforce words that are mispelled. Somehow keep count of the word mispelled and pass those to AI for reenforcement. The flashcards should only display those words for the topic selected. There should be a separate button to clear the history and a separate button to clear the flashcards for the selected topic. The topic dropdown should be located above the Chat and Flashcards tabs.
+- ~~Consider moving the flashcards under the users/topic tree in the IndexedDB under each topic so that AI can reenforce words that are mispelled. Somehow keep count of the word mispelled and pass those to AI for reenforcement. The flashcards should only display those words for the topic selected. There should be a separate button to clear the history and a separate button to clear the flashcards for the selected topic. The topic dropdown should be located above the Chat and Flashcards tabs.~~ ✅ Done — flashcards now live on `users.topics[].flashcards` with a `misses` count (Dexie v6), the shared topic dropdown sits above the Chat/Flashcards tabs and drives both, the tutor receives the five worst-offender words in its prompt, and Clear History / Clear Flashcards are separate per-topic buttons.
