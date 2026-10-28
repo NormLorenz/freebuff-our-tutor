@@ -290,8 +290,9 @@ Notes:
 
 - Should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor
-- ~~Railway default networking URL is https://freebuff-our-tutor-production.up.railway.app/public/#home instead of https://freebuff-our-tutor-production.up.railway.app. Why?~~ ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
 - ChatGPT history issue. It is forgetting my name.
+- Put the Flashcards missed words in a scrollable section. Display the first three rows.
+- ~~Railway default networking URL is https://freebuff-our-tutor-production.up.railway.app/public/#home instead of https://freebuff-our-tutor-production.up.railway.app. Why?~~ ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
 - ~~Rename dev-server.js to server.js~~ ✅ Done
 - ~~Sign out the user when the browser is closed.~~ ✅ Done — the session is
   stored in `sessionStorage`, which the browser clears on close (see

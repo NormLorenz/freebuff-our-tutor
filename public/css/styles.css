@@ -391,8 +391,16 @@ html[data-theme="dark"] .tutor-tab.is-active { color: #201812; }
 
 /* Overview chips under the card; inactive ones sit out of the deck. */
 .flash-wordlist h4 { margin: 0.6rem 0 0; font-size: 0.9rem; color: var(--text-soft); }
-.flash-wordlist { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.flash-chip { cursor: pointer; }
+/* Scrollable missed-words section: shows the FIRST THREE rows
+ * (wrapping several words per row); more rows scroll into view.      */
+.flash-wordlist {
+  display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start;
+  align-content: flex-start; gap: 0.4rem;
+  max-height: calc(3 * 2rem + 2 * 0.4rem); /* 3 chip rows (≈2rem each) + 2 gaps */
+  overflow-y: auto;
+  padding-right: 0.25rem; /* room for the scrollbar */
+}
+.flash-chip { cursor: pointer; line-height: 1.1rem; flex-shrink: 0; }
 .flash-chip-inactive { opacity: 0.55; text-decoration: line-through; }
 .flash-chip-inactive::after { content: " ⛔"; text-decoration: none; }
 .flash-chip:hover { border-color: var(--accent); color: var(--accent); }
