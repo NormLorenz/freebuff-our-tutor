@@ -13,8 +13,8 @@ A single-page marketing + learning site with three AI-powered pieces:
    clear-history support.
 2. **Herr Grün, the AI German tutor** (My Tutor section) — a members-only chat
    that writes German at your CEFR level (A1–C1) with gentle corrections and
-   English notes, plus a 🔁 **Repeat Question in English** button. You reach it
-   via the "My Tutor" nav link that appears once you are signed in.
+   English notes. You reach it via the "My Tutor" nav link that appears once
+   you are signed in.
 3. **Flashcards** — a tab inside My Tutor, driven by the shared topic dropdown
    that sits above the Chat and Flashcards tabs. Every live ChatGPT tutor
    reply harvests the misspelled German words from your message and stores
@@ -186,9 +186,7 @@ vercel --prod                   # production deploy with env vars attached
   English; special characters (Ä ä Ö ö Ü ü ß) have insert buttons near the
   composer. A topic dropdown sits above the Chat and Flashcards tabs and
   drives both panes. 🗑️ **Clear History** wipes only the selected topic's
-  chat. 🔁 **Repeat Question in English** replays your last question behind
-  the scenes — asking in German, answering in English — and neither the
-  request nor the answer is committed to the stored history.
+  chat.
 - **Flashcards** — the second tab inside My Tutor, sharing the topic
   dropdown above the tabs; the deck is always the selected topic. Every
   live tutor ChatGPT reply harvests the misspelled German words from your
