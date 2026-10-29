@@ -70,8 +70,10 @@ and graceful fallbacks when offline or without an OpenAI key.
   In-memory fallback when IndexedDB is unavailable.
 - **Flashcards UI** (`public/js/flashcards.js`) — random flip-card deck
   scoped to the topic selected in the shared My Tutor dropdown, miss-count
-  badges on cards and word chips (worst offenders first), Mark Inactive,
-  and a per-topic Clear Flashcards button.
+  badges on cards and word chips (worst offenders first), the
+  chip list capped at three visible rows (it scrolls the rest so the
+  panel height stays stable), Mark Inactive, and a per-topic Clear
+  Flashcards button.
 - **Topic packs** (`public/js/topics.js` + `public/data/topics/*.json`) —
   CEFR-themed practice topics per range (A1–A2, A2–B1, B1–C1).
 - **Wire-up** (`public/js/main.js`) — auth modal, session restore, theme
@@ -291,7 +293,7 @@ Notes:
 - Should package.json should use dexie and openai package dependancies?
 - Find out which OpenAI model would be best for a German AI tutor
 - ChatGPT history issue. It is forgetting my name.
-- Put the Flashcards missed words in a scrollable section. Display the first three rows.
+- ~~Put the Flashcards missed words in a scrollable section. Display the first three rows.~~ ✅ Done — the chip list fits three rows (multiple words per row) and scrolls the rest (see `public/css/styles.css`), keeping the Flashcards panel height stable as the deck grows.
 - ~~Railway default networking URL is https://freebuff-our-tutor-production.up.railway.app/public/#home instead of https://freebuff-our-tutor-production.up.railway.app. Why?~~ ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
 - ~~Rename dev-server.js to server.js~~ ✅ Done
 - ~~Sign out the user when the browser is closed.~~ ✅ Done — the session is
