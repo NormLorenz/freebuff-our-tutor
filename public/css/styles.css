@@ -326,7 +326,7 @@ html[data-theme="dark"] .auth-tab.is-active { color: #201812; }
 html[data-theme="dark"] .tutor-tab.is-active { color: #201812; }
 .tutor-pane { width: 100%; }
 .tutor-panel {
-  width: min(560px, 100%); margin: 0 auto; padding: 1.2rem;
+  width: min(640px, 100%); margin: 0 auto; padding: 1.2rem;
   display: flex; flex-direction: column; gap: 0.8rem;
 }
 .tutor-head { display: flex; justify-content: space-between; align-items: center; }
@@ -361,7 +361,7 @@ html[data-theme="dark"] .tutor-tab.is-active { color: #201812; }
   width: min(640px, 100%); margin: 0 auto; padding: 1.4rem;
   display: flex; flex-direction: column; gap: 0.9rem;
 }
-.flash-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.flash-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; justify-content: center; }
 .flash-status { text-align: center; margin: 0; }
 .flash-empty { text-align: center; color: var(--text-soft); font-style: italic; margin: 0.4rem 0; }
 

@@ -50,7 +50,7 @@
     clearBtn = $("#flashClear");
 
     nextBtn?.addEventListener("click", () => nextCard());
-    shuffleBtn?.addEventListener("click", () => buildDeck());
+    shuffleBtn?.addEventListener("click", () => shuffleDeck());
     cardEl?.addEventListener("click", () => {
       if (deck[index]) {
         flipped = !flipped;
@@ -186,6 +186,20 @@
     flipped = false;
     cardEl.classList.remove("is-flipped");
     render();
+  }
+
+  /* Shuffle button: rebuild the shuffled deck and deal a RANDOM card,
+   * (buildDeck above always deals position 1, which left the counter on
+   * "Card 1 / N" after every shuffle). Dealing a random position keeps
+   * the "Card X / N" counter updating to the new card's real spot. */
+  async function shuffleDeck() {
+    if (!user || !DB() || topicId == null) return;
+    const cards = await DB().Flashcards.list(user, topicId);
+    deck = shuffleInPlace(cards.filter((c) => c.active));
+    index = deck.length ? Math.floor(Math.random() * deck.length) : -1;
+    flipped = false;
+    render();
+    renderWordList();
   }
 
   function currentCard() {

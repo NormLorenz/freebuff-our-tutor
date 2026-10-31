@@ -290,9 +290,11 @@ Notes:
 
 # TODO's
 
-- Should package.json should use dexie and openai package dependancies?
-- Find out which OpenAI model would be best for a German AI tutor
-- ChatGPT history issue. It is forgetting my name.
+- Find out which OpenAI model would be best suited for a German AI tutor
+- Eventually provide both spoken and listen capabilities to the tutor.
+- ~~Center buttons on the Flashcards tab~~ ✅ Done — `.flash-controls` is centered with `justify-content: center` (see `public/css/styles.css`).
+- ~~Update the card number when clicking Shuffle~~ ✅ Done — Shuffle rebuilds and reshuffles the deck and deals a random card, so the "Card X / N" counter shows the dealt card's real position instead of staying on "Card 1 / N" (see `public/js/flashcards.js` → `shuffleDeck`); topic switches and refreshes still deal card 1.
+- Fix Anna and Lukas's picture
 - ~~Put the Flashcards missed words in a scrollable section. Display the first three rows.~~ ✅ Done — the chip list fits three rows (multiple words per row) and scrolls the rest (see `public/css/styles.css`), keeping the Flashcards panel height stable as the deck grows.
 - ~~Railway default networking URL is https://freebuff-our-tutor-production.up.railway.app/public/#home instead of https://freebuff-our-tutor-production.up.railway.app. Why?~~ ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
 - ~~Rename dev-server.js to server.js~~ ✅ Done
