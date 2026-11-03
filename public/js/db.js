@@ -349,10 +349,17 @@ const UserTopics = {
 /* of how many times the student has misspelled that word while
 /* practicing the topic. Repeated misses increment the count (no new
 /* row), so the tutor and the Flashcards tab can reinforce the
-/* worst-offending words first. `active` false counts a card out of the
-/* random practice deck until re-activated.                            */
+/* worst-offending words first. When the student later spells the word
+/* correctly in a tutor message, the count is decremented instead (see
+/* creditWords — never below 1, and only for words missed more than
+/* once). `active` false counts a card out of the random practice deck
+/* until re-activated.                                                 */
 const Flashcards = {
-  /* Normalize a German word for de-dup comparisons (case, ß, umlauts). */
+  /* Normalize a German word for de-dup comparisons (case, ß, umlauts)
+   * — used to keep "heiße" and "Heiße" from creating duplicate cards.
+   * It is deliberately NOT used for reinforcement credit matching:
+   * spelling special characters correctly is the point there, which is
+   * what _strict below is for.                                          */
   _norm(word) {
     return String(word || "")
       .toLowerCase()
@@ -361,6 +368,16 @@ const Flashcards = {
       .replace(/ö/g, "oe")
       .replace(/ü/g, "ue")
       .trim();
+  },
+
+  /* Normalize a word for EXACT spelling comparison: lower case and trimmed,
+   * but ß and umlauts are kept as-is. Reinforcement credit requires the
+   * word to be spelled correctly the way it is written on the language:
+   * "heiße" matches "heiße" and "Heiße" but NOT "heisse" or "heise",
+   * and "Frühstück" must be typed with the ü — "Fruehstueck" does not
+   * count. Special characters are part of the spelling, after all.        */
+  _strict(word) {
+    return String(word || "").toLowerCase().trim();
   },
 
   /* Store harvested words { wrong, correct, english }[] as flashcards
@@ -403,6 +420,56 @@ const Flashcards = {
     return added;
   },
 
+  /* Reinforcement on success — called when a tutor message is sent:
+   * find the cards whose German word is spelled CORRECTLY somewhere in
+   * the student's message and decrement their `misses` count by one.
+   * Matching is exact but case-insensitive (_strict): the word must be
+   * spelled with its ß and umlauts exactly as stored — "heiße" matches
+   * only "heiße"/"Heiße", never "heisse" or "heise", and "Frühstück"
+   * must contain the ü. Rules:
+   *   - only cards with a `misses` count greater than 1 take part —
+   *     these are exactly the words the reinforcement process includes;
+   *   - the count never drops below 1 (a card once reinforced stays at
+   *     1 and keeps its "missed" history).
+   * Returns the words whose counts were decremented (empty = nothing
+   * changed, nothing is written).                                       */
+  async creditWords(email, topicId, text) {
+    if (!email || topicId == null) return [];
+    const user = await Users.findByEmail(email);
+    if (!user || !Array.isArray(user.topics)) return [];
+    /* Split the message into letter-only tokens (punctuation gone) and
+     * normalize each the same way the card words are normalized.        */
+    const tokens = (String(text || "").toLowerCase().match(/[\p{L}]+/gu) || [])
+      .map((t) => Flashcards._strict(t));
+    if (!tokens.length) return [];
+    /* Single words match within one token; multi-word phrases must hit
+     * the same tokens back to back.                                     */
+    const hit = (german) => {
+      const phrase = Flashcards._strict(german).split(/\s+/);
+      if (phrase.length === 1) return tokens.includes(phrase[0]);
+      for (let i = 0; i + phrase.length <= tokens.length; i++) {
+        if (phrase.every((w, j) => tokens[i + j] === w)) return true;
+      }
+      return false;
+    };
+    let changed = false;
+    const credited = [];
+    const topics = user.topics.map((t) => {
+      if (Number(t.id) !== Number(topicId)) return t;
+      const cards = (Array.isArray(t.flashcards) ? t.flashcards : []).map((c) => {
+        if ((c.misses || 1) <= 1 || !hit(c.german)) return c; // misses > 1 only
+        const misses = Math.max(1, (c.misses || 1) - 1); // never below 1
+        credited.push(c.german);
+        changed = true;
+        return { ...c, misses };
+      });
+      return { ...t, flashcards: cards };
+    });
+    if (!changed) return [];
+    await store.put("users", { ...user, topics });
+    return credited;
+  },
+
   /* The flashcards under one topic of the user's topic tree. A topicId
    * is required — cards always live on the selected topic now.         */
   async list(email, topicId) {
@@ -421,7 +488,7 @@ const Flashcards = {
   },
 
   /* Mark a card inactive (out of the deck) or active again. */
-  async setActive(email, topicId, german, active) {
+  async  setActive(email, topicId, german, active) {
     const user = await Users.findByEmail(email);
     if (!user || !Array.isArray(user.topics)) return null;
     const key = Flashcards._norm(german);

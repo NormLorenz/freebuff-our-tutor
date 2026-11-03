@@ -451,13 +451,16 @@
     /* The student's most-misspelled words for the selected topic (kept on
        the topic in IndexedDB with a miss count — see js/db.js →
        Flashcards). Passed to the tutor so it reenforces exactly the words
-       the student keeps getting wrong. Worst offenders first, max 5. */
+       the student keeps getting wrong. Only words with a `misses` count
+       greater than 1 take part in the reinforcement process (the count
+       is decremented when the student later types the word correctly —
+       see js/db.js → Flashcards.creditWords). Worst offenders first, max 5. */
     let weakWords = null;
     if (activeTopic && DB) {
       try {
         const cards = await DB.Flashcards.list(currentUser.email, activeTopic.id);
         weakWords = cards
-          .filter((c) => c.active)
+          .filter((c) => c.active && (c.misses || 1) > 1) // words missed more than once only
           .sort((a, b) => (b.misses || 0) - (a.misses || 0))
           .slice(0, 5);
       } catch (_) { /* reinforcement is best-effort */ }
@@ -485,6 +488,16 @@
         activeTopic.visited = true;
       }
       markSelectComplete(activeTopic.id);
+      /* Reinforcement on success: a flashcard word spelled CORRECTLY in
+         the message just sent is decremented — exact spelling required
+         (case-insensitive; "heiße" counts, "heisse" does not), never
+         below 1, and only for words missed more than once
+         (js/db.js → Flashcards.creditWords). Runs in the background —
+         it must never hold up the chat. */
+      if (Flash) {
+        Flash.onMessage(currentUser.email, activeTopic.id, q)
+          .catch((err) => console.warn("[flashcards] reinforcement failed:", err));
+      }
       /* Once the live ChatGPT tutor reply is in, harvest the misspelled
          German words from this turn into the user's flashcard deck
          (stored per user + topic; see js/db.js → Flashcards). Runs in

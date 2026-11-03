@@ -18,12 +18,18 @@ A single-page marketing + learning site with three AI-powered pieces:
 3. **Flashcards** — a tab inside My Tutor, driven by the shared topic dropdown
    that sits above the Chat and Flashcards tabs. Every live ChatGPT tutor
    reply harvests the misspelled German words from your message and stores
-   them under that topic on your user record, each with a `misses` count that
-   grows every time you misspell the same word again. The deck deals the
-   selected topic's active words randomly, and the tutor gets your five
-   worst-offender words passed into its prompt so answers reenforce exactly
-   the words you keep getting wrong. You can mark a word inactive so it
-   drops out of the deck until you put it back.
+   them under that topic on your user record, each with a `misses` count
+   that grows every time you misspell the same word again. The
+   reinforcement process only includes words with a `misses` count greater
+   than 1: the tutor gets your five worst-offender words passed into its
+   prompt so answers reenforce exactly the words you keep getting wrong,
+   and spelling one of them correctly in the tutor composer works the other
+   way — its count is decremented by one on send. Matching is exact:
+   special characters must be spelled correctly ("heiße" counts,
+   "heisse" or "heise" does not; "Frühstück" needs the ü), and the count
+   never goes below 1. The deck deals the selected topic's active words
+   randomly, so the counts you see reflect your live progress. You can
+   mark a word inactive so it drops out of the deck until you put it back.
 4. **Local accounts** — sign up (name, email, password, lesson level:
    Beginner A1–A2 / Intermediate A2–B1 / Advanced B1–C1) and sign in via the
    header button (or the plan CTAs in the Lessons section). Once signed in:
@@ -60,14 +66,18 @@ and graceful fallbacks when offline or without an OpenAI key.
   `api/tutor.js`) — the "My Tutor" section that chats in German at your
   CEFR level (A1–C1) with gentle corrections and English notes. Also
   harvests misspellings from each tutor turn for the flashcard deck,
-  receives your most-misspelled words for the topic in its system prompt
-  (reinforcement), and falls back to a built-in offline practice mode
-  without a key.
+  receives your worst-offender words for the topic (only words missed
+  more than once) in its system prompt (reinforcement), and falls back
+  to a built-in offline practice mode without a key.
 - **Local accounts, topics & flashcards** (`public/js/db.js`) — Dexie/IndexedDB
   storage of users (with per-user topic packs copied from the plan at
   signup; each topic keeps its own chat history and flashcard deck with
-  miss counts), newsletter subscribers, chat sessions, and preferences.
-  In-memory fallback when IndexedDB is unavailable.
+  miss counts that grow on every repeat miss and drop by one when you
+  spell the word correctly in a tutor message — exact spelling required
+  (case-insensitive; "heiße" counts, "heisse" does not; "Frühstück" must
+  keep its ü), never below 1, only for words missed more than once; see
+  `Flashcards.creditWords`), newsletter subscribers, chat sessions, and
+  preferences. In-memory fallback when IndexedDB is unavailable.
 - **Flashcards UI** (`public/js/flashcards.js`) — random flip-card deck
   scoped to the topic selected in the shared My Tutor dropdown, miss-count
   badges on cards and word chips (worst offenders first), the
@@ -186,14 +196,25 @@ vercel --prod                   # production deploy with env vars attached
   your user record) and displays it as the plan's CEFR range — A1–A2
   (Beginner), A2–B1 (Intermediate), or B1–C1 (Advanced). Write in German or
   English; special characters (Ä ä Ö ö Ü ü ß) have insert buttons near the
-  composer. A topic dropdown sits above the Chat and Flashcards tabs and
+  composer. Use them when reinforcing your flashcards: credit requires the
+  word to be spelled exactly like its card (umlauts and ß must be typed
+  as-is — "heiße" counts, "heisse" or "heise" does not), so typing the
+  special characters correctly is exactly the practice that lowers the
+  count. A topic dropdown sits above the Chat and Flashcards tabs and
   drives both panes. 🗑️ **Clear History** wipes only the selected topic's
   chat.
 - **Flashcards** — the second tab inside My Tutor, sharing the topic
   dropdown above the tabs; the deck is always the selected topic. Every
   live tutor ChatGPT reply harvests the misspelled German words from your
   message (stored under the topic with a miss count that grows on every
-  repeat miss). Deal random cards (Next Card / Shuffle), click the card to
+  repeat miss). On the flip side, spelling a word correctly in the tutor
+  composer and clicking Send decrements that word's stored count by one —
+  only words missed more than once participate, the match is exact
+  (case-insensitive; ß and umlauts must be typed as-is — “heiße” counts,
+  “heisse” or “heise” does not), and the count never falls below 1 — the
+  Flashcards tab refreshes live so the lowered
+  count shows up right away. Deal random cards (Next Card / Shuffle),
+  click the card to
   flip the German word to its English meaning and the wrong form you
   wrote, press **Mark Inactive** to take a word out of the deck (click its
   ⛔ chip to put it back), or empty the topic's deck with 🗑️ **Clear
@@ -294,15 +315,15 @@ Notes:
 
 - Provide both spoken and listen capabilities to the tutor.
 
-- The logic for adding words to Flashcards and incrementing the `misses` counter is working correctly. However, we need to add logic to decrement the `misses` counter when the user correctly enters a word in the next `tutorInput` field when the user clicks send. 
+- ~~The logic for adding words to Flashcards and incrementing the `misses` counter is working correctly. However, we need to add logic to decrement the `misses` counter when the user correctly enters a word in the next `tutorInput` field when the user clicks send.~~
 
-For example, if flashcard displays 'heiße' and the misses count is 2 and the user enters 'heiße' in the `tutorInput` field and clicks send, the logic should decrement the misses count to 1. The logic should understand the difference of words using umlauts and essets.
+~~For example, if flashcard displays 'heiße' and the misses count is 2. Whe the user enters 'heiße' in the `tutorInput` field and clicks send, the logic should decrement the misses count to 1. The logic should understand the difference of words using umlauts and essets.~~
 
-The `misses` counter must never be reduced below 1. 
+~~The `misses` counter must never be reduced below 1.~~
 
-We only need to include words in the reinforcment process that have a `misses` counter greater than 1.
+~~We only need to include words in the reinforcment process that have a `misses` counter greater than 1.~~
 
-Please update the README.md file to reflect these changes.
+~~Please update the README.md file to reflect these changes.~~ ✅ Done — every send in the tutor composer now checks the typed message against the selected topic's flashcards and decrements the `misses` count of each correctly spelled word by one (`public/js/db.js` → `Flashcards.creditWords`, called from `public/js/main.js` via `GutenFlashcards.onMessage` on every `tutorInput` send). Matching is exact but case-insensitive (`public/js/db.js` → `Flashcards._strict`): the word must be spelled with its ß and umlauts exactly as stored — a card harvested as 'heiße' is credited only when you actually type 'heiße', never 'heisse' or 'heise', and 'Frühstück' must contain the ü ('Fruehstueck' does not count). Only words whose `misses` counter is greater than 1 take part in the reinforcement process — the same words passed to the tutor in its prompt — and the counter never drops below 1, so a word at 1 stays there. The Flashcards tab's deck and word list refresh live so lowered counts show up immediately.
 
 
 - ~~Center buttons on the Flashcards tab~~ ✅ Done — `.flash-controls` is centered with `justify-content: center` (see `public/css/styles.css`).

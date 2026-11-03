@@ -146,6 +146,28 @@
     }
   }
 
+  /* main.js calls this whenever the student sends a message to the
+   * tutor: any flashcard word spelled CORRECTLY within it counts as
+   * reinforcement progress — its `misses` count is decremented by one
+   * (never below 1, and only for words missed more than once — see
+   * js/db.js → Flashcards.creditWords, which requires the word to be
+   * spelled exactly as stored (case-insensitive; ß and umlauts must be
+   * typed as-is — "heiße" counts, "heisse" does not). Like harvesting it is best-effort, runs
+   * in the background, and only rebuilds the visible deck when the
+   * practiced topic is the one currently selected.                     */
+  async function onMessage(email, practicedTopicId, text) {
+    if (!email || !DB() || practicedTopicId == null || !text) return;
+    try {
+      const credited = await DB().Flashcards.creditWords(email, practicedTopicId, text);
+      if (!credited.length) return;
+      if (user === email && Number(practicedTopicId) === Number(topicId)) {
+        await buildDeck(); // the new (lower) miss counts show up live
+      }
+    } catch (err) {
+      console.warn("[flashcards] reinforcement skipped:", err?.message || err);
+    }
+  }
+
   /* -------------------------------------------------------------- */
   /* Deck building + display                                         */
   /* -------------------------------------------------------------- */
@@ -337,6 +359,7 @@
   window.GutenFlashcards = {
     init,
     onTurn,
+    onMessage,
     setSignedIn,
     setTopic,
     refresh,
