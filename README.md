@@ -291,7 +291,20 @@ Notes:
 # TODO's
 
 - Find out which OpenAI model would be best suited for a German AI tutor
-- Eventually provide both spoken and listen capabilities to the tutor.
+
+- Provide both spoken and listen capabilities to the tutor.
+
+- The logic for adding words to Flashcards and incrementing the `misses` counter is working correctly. However, we need to add logic to decrement the `misses` counter when the user correctly enters a word in the next `tutorInput` field when the user clicks send. 
+
+For example, if flashcard displays 'heiße' and the misses count is 2 and the user enters 'heiße' in the `tutorInput` field and clicks send, the logic should decrement the misses count to 1. The logic should understand the difference of words using umlauts and essets.
+
+The `misses` counter must never be reduced below 1. 
+
+We only need to include words in the reinforcment process that have a `misses` counter greater than 1.
+
+Please update the README.md file to reflect these changes.
+
+
 - ~~Center buttons on the Flashcards tab~~ ✅ Done — `.flash-controls` is centered with `justify-content: center` (see `public/css/styles.css`).
 - ~~Update the card number when clicking Shuffle~~ ✅ Done — Shuffle rebuilds and reshuffles the deck and deals a random card, so the "Card X / N" counter shows the dealt card's real position instead of staying on "Card 1 / N" (see `public/js/flashcards.js` → `shuffleDeck`); topic switches and refreshes still deal card 1.
 - ~~Fix Anna and Lukas's picture~~ ✅ Done — `index.html` now shows `lukas-anna-keller-2.png` (a larger 1200×1310 version, with `width`/`height` updated to match) instead of the old `lukas-anna-keller.jpg`.
