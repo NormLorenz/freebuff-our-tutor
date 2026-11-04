@@ -315,25 +315,22 @@ Notes:
 
 - Provide both spoken and listen capabilities to the tutor.
 
-- ~~The logic for adding words to Flashcards and incrementing the `misses` counter is working correctly. However, we need to add logic to decrement the `misses` counter when the user correctly enters a word in the next `tutorInput` field when the user clicks send.~~
+- ✅ Done — every send in the tutor composer now checks the typed message against the selected topic's flashcards and decrements the `misses` count of each correctly spelled word by one (`public/js/db.js` → `Flashcards.creditWords`, called from `public/js/main.js` via `GutenFlashcards.onMessage` on every `tutorInput` send). Matching is exact but case-insensitive (`public/js/db.js` → `Flashcards._strict`): the word must be spelled with its ß and umlauts exactly as stored — a card harvested as 'heiße' is credited only when you actually type 'heiße', never 'heisse' or 'heise', and 'Frühstück' must contain the ü ('Fruehstueck' does not count). Only words whose `misses` counter is greater than 1 take part in the reinforcement process — the same words passed to the tutor in its prompt — and the counter never drops below 1, so a word at 1 stays there. The Flashcards tab's deck and word list refresh live so lowered counts show up immediately.
 
-~~For example, if flashcard displays 'heiße' and the misses count is 2. Whe the user enters 'heiße' in the `tutorInput` field and clicks send, the logic should decrement the misses count to 1. The logic should understand the difference of words using umlauts and essets.~~
+- ✅ Done — `.flash-controls` is centered with `justify-content: center` (see `public/css/styles.css`).
 
-~~The `misses` counter must never be reduced below 1.~~
+- ✅ Done — Shuffle rebuilds and reshuffles the deck and deals a random card, so the "Card X / N" counter shows the dealt card's real position instead of staying on "Card 1 / N" (see `public/js/flashcards.js` → `shuffleDeck`); topic switches and refreshes still deal card 1.
 
-~~We only need to include words in the reinforcment process that have a `misses` counter greater than 1.~~
+- ✅ Done — `index.html` now shows `lukas-anna-keller-2.png` (a larger 1200×1310 version, with `width`/`height` updated to match) instead of the old `lukas-anna-keller.jpg`.
 
-~~Please update the README.md file to reflect these changes.~~ ✅ Done — every send in the tutor composer now checks the typed message against the selected topic's flashcards and decrements the `misses` count of each correctly spelled word by one (`public/js/db.js` → `Flashcards.creditWords`, called from `public/js/main.js` via `GutenFlashcards.onMessage` on every `tutorInput` send). Matching is exact but case-insensitive (`public/js/db.js` → `Flashcards._strict`): the word must be spelled with its ß and umlauts exactly as stored — a card harvested as 'heiße' is credited only when you actually type 'heiße', never 'heisse' or 'heise', and 'Frühstück' must contain the ü ('Fruehstueck' does not count). Only words whose `misses` counter is greater than 1 take part in the reinforcement process — the same words passed to the tutor in its prompt — and the counter never drops below 1, so a word at 1 stays there. The Flashcards tab's deck and word list refresh live so lowered counts show up immediately.
+- ✅ Done — the chip list fits three rows (multiple words per row) and scrolls the rest (see `public/css/styles.css`), keeping the Flashcards panel height stable as the deck grows.
 
+- ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
 
-- ~~Center buttons on the Flashcards tab~~ ✅ Done — `.flash-controls` is centered with `justify-content: center` (see `public/css/styles.css`).
-- ~~Update the card number when clicking Shuffle~~ ✅ Done — Shuffle rebuilds and reshuffles the deck and deals a random card, so the "Card X / N" counter shows the dealt card's real position instead of staying on "Card 1 / N" (see `public/js/flashcards.js` → `shuffleDeck`); topic switches and refreshes still deal card 1.
-- ~~Fix Anna and Lukas's picture~~ ✅ Done — `index.html` now shows `lukas-anna-keller-2.png` (a larger 1200×1310 version, with `width`/`height` updated to match) instead of the old `lukas-anna-keller.jpg`.
-- ~~Put the Flashcards missed words in a scrollable section. Display the first three rows.~~ ✅ Done — the chip list fits three rows (multiple words per row) and scrolls the rest (see `public/css/styles.css`), keeping the Flashcards panel height stable as the deck grows.
-- ~~Railway default networking URL is https://freebuff-our-tutor-production.up.railway.app/public/#home instead of https://freebuff-our-tutor-production.up.railway.app. Why?~~ ✅ Fixed — `index.html` uses relative asset paths, so serving it at `/` broke CSS/JS/images (they resolved to `/css/...` → 404). `server.js` now 301-redirects `/` and `/public` to `/public/`, so the bare root URL works.
-- ~~Rename dev-server.js to server.js~~ ✅ Done
-- ~~Sign out the user when the browser is closed.~~ ✅ Done — the session is
-  stored in `sessionStorage`, which the browser clears on close (see
-  `public/js/main.js` → Restore session).
-- ~~Create a new menu item 'Flashcards' and section that is built from mispelled German words and their English equivalent once the tutor ChatGPT call has returned. These words will be stored by user and topic. The flashcards will display words randomly and have the option to mark the word inactive.~~ ✅ Done — see the Flashcards section description above.
-- ~~Consider moving the flashcards under the users/topic tree in the IndexedDB under each topic so that AI can reenforce words that are mispelled. Somehow keep count of the word mispelled and pass those to AI for reenforcement. The flashcards should only display those words for the topic selected. There should be a separate button to clear the history and a separate button to clear the flashcards for the selected topic. The topic dropdown should be located above the Chat and Flashcards tabs.~~ ✅ Done — flashcards now live on `users.topics[].flashcards` with a `misses` count (Dexie v6), the shared topic dropdown sits above the Chat/Flashcards tabs and drives both, the tutor receives the five worst-offender words in its prompt, and Clear History / Clear Flashcards are separate per-topic buttons.
+- ✅ Done — Rename dev-server.js to server.js
+
+- ✅ Done — the session is stored in `sessionStorage`, which the browser clears on close (see `public/js/main.js` → Restore session).
+
+- ✅ Done — see the Flashcards section description above.
+
+- ✅ Done — flashcards now live on `users.topics[].flashcards` with a `misses` count (Dexie v6), the shared topic dropdown sits above the Chat/Flashcards tabs and drives both, the tutor receives the five worst-offender words in its prompt, and Clear History / Clear Flashcards are separate per-topic buttons.
